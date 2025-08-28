@@ -14,3 +14,5 @@ export async function POST(req: Request, { params }: { params: { token: string }
   })
   return Response.json({ id: created.id })
 }
+
+

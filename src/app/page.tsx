@@ -16,9 +16,21 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
+      {/* NEW: Mode picker */}
+      <section className="card">
+        <h2 className="text-lg font-semibold mb-2">Create a new form</h2>
+        <p className="text-sm text-gray-600 mb-3">Choose how you want to build your form.</p>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/templates/new?mode=ai" className="btn">✨ Use AI</Link>
+          <Link href="/templates/new?mode=manual" className="btn">🛠️ Create Manually</Link>
+        </div>
+      </section>
+
       <section className="card">
         <h2 className="text-lg font-semibold mb-2">Templates</h2>
-        <div className="mb-3"><Link href="/templates/new" className="btn">+ New Template</Link></div>
+        <div className="mb-3">
+          <Link href="/templates/new" className="btn">+ New Template</Link>
+        </div>
         <table className="table">
           <thead><tr><th>Name</th><th>Version</th><th>Publications</th></tr></thead>
           <tbody>
