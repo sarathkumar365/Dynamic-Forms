@@ -1,0 +1,52 @@
+{
+  "title": "Project Intake",
+  "type": "object",
+  "required": ["projectType"],
+  "properties": {
+    "projectType": {
+      "type": "string",
+      "title": "Project type",
+      "enum": ["Website", "Mobile App", "Consulting", "Other"]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "projectType": { "const": "Website" } } },
+      "then": {
+        "properties": {
+          "cms": {
+            "type": "string",
+            "title": "Preferred CMS",
+            "enum": ["WordPress", "Headless (Contentful/Sanity)", "Custom"]
+          },
+          "pages": { "type": "integer", "minimum": 1, "title": "Approx. # of pages" }
+        },
+        "required": ["cms"]
+      }
+    },
+    {
+      "if": { "properties": { "projectType": { "const": "Mobile App" } } },
+      "then": {
+        "properties": {
+          "platforms": {
+            "type": "array",
+            "title": "Platforms",
+            "items": { "type": "string", "enum": ["iOS", "Android"] },
+            "uniqueItems": true,
+            "minItems": 1
+          }
+        },
+        "required": ["platforms"]
+      }
+    },
+    {
+      "if": { "properties": { "projectType": { "const": "Other" } } },
+      "then": {
+        "properties": {
+          "customProject": { "type": "string", "title": "Please describe" }
+        },
+        "required": ["customProject"]
+      }
+    }
+  ]
+}

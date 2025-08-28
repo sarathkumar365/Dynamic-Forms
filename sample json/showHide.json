@@ -1,0 +1,26 @@
+{
+  "title": "Invoice Preferences",
+  "type": "object",
+  "required": ["needInvoice"],
+  "properties": {
+    "needInvoice": { "type": "boolean", "title": "Do you need an invoice?" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "needInvoice": { "const": true } }, "required": ["needInvoice"] },
+      "then": {
+        "properties": {
+          "companyName": { "type": "string", "title": "Company name" },
+          "taxId": { "type": "string", "title": "Tax ID" },
+          "billingEmail": { "type": "string", "format": "email", "title": "Billing email" }
+        },
+        "required": ["companyName", "billingEmail"]
+      }
+    }
+  ]
+}
+
+{
+  "companyName": { "ui:placeholder": "Acme Inc." },
+  "billingEmail": { "ui:placeholder": "billing@acme.com" }
+}
