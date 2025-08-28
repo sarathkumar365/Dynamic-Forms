@@ -56,6 +56,10 @@ model ShareLink {
   createdAt     DateTime     @default(now())
   isDisabled    Boolean      @default(false)
   submissions   Submission[]
+
+  assignedName  String?
+  assignedEmail String?
+  note          String?
 }
 
 model Submission {
