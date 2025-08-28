@@ -1,0 +1,8 @@
+node_modules
+.devcontainer
+.vscode
+.enc
+.github
+.env.local
+.env
+.next

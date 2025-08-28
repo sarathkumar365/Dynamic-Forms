@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  createdAt     DateTime      @default(now())
+  templates     Template[]
+  publications  Publication[]
+}
+
+model Template {
+  id            String       @id @default(cuid())
+  ownerId       String
+  owner         User         @relation(fields: [ownerId], references: [id])
+  name          String
+  description   String?
+  schema        String       // JSON string
+  uiSchema      String?      // JSON string
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  version       Int          @default(1)
+  publications  Publication[]
+
+  @@index([ownerId])
+}
+
+model Publication {
+  id            String       @id @default(cuid())
+  templateId    String
+  template      Template     @relation(fields: [templateId], references: [id])
+  ownerId       String
+  owner         User         @relation(fields: [ownerId], references: [id])
+  title         String
+  schema        String       // JSON string
+  uiSchema      String?      // JSON string
+  createdAt     DateTime     @default(now())
+  shareLinks    ShareLink[]
+  submissions   Submission[]
+
+  @@index([templateId])
+  @@index([ownerId, createdAt])
+}
+
+model ShareLink {
+  id            String       @id @default(cuid())
+  publicationId String
+  publication   Publication  @relation(fields: [publicationId], references: [id])
+  token         String       @unique
+  createdAt     DateTime     @default(now())
+  isDisabled    Boolean      @default(false)
+  submissions   Submission[]
+}
+
+model Submission {
+  id              String       @id @default(cuid())
+  publicationId   String
+  publication     Publication  @relation(fields: [publicationId], references: [id])
+  shareLinkId     String?
+  shareLink       ShareLink?   @relation(fields: [shareLinkId], references: [id])
+  createdAt       DateTime     @default(now())
+  payload         String       // JSON string
+  meta            String?      // JSON string
+
+  @@index([publicationId, createdAt])
+}
