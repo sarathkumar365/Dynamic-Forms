@@ -133,7 +133,12 @@ export default async function PublicationPage({ params }: { params: { id: string
   )
 }
 
-function pretty(s: string | null) {
-  if (!s) return ''
-  try { return JSON.stringify(JSON.parse(s), null, 2) } catch { return s }
+
+function pretty(v: any) {
+  if (v == null) return ''
+  if (typeof v === 'string') {
+    try { return JSON.stringify(JSON.parse(v), null, 2) } catch { return v }
+  }
+  try { return JSON.stringify(v, null, 2) } catch { return String(v) }
 }
+

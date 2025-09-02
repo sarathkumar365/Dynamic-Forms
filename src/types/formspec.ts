@@ -13,6 +13,7 @@ export interface FSVisibleWhenClause {
 
 export interface FSQuestion {
   id: FSId;
+  key?: string;             // human-friendly data key ("name", "mobile")
   type: FSQuestionType;
   label: string;
   required?: boolean;

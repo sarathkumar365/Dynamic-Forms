@@ -6,6 +6,7 @@ import Inspector from "./Inspector";
 import RuleBuilder from "./RuleBuilder";
 import PreviewPane from "./PreviewPane";
 import Toolbar from "./Toolbar";
+import SaveBar from "./SaveBar";
 import { useState } from "react";
 
 export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
@@ -18,6 +19,7 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
         <QuestionPalette onAdd={(sectionId, q) => addQuestion(sectionId, q)} spec={spec} />
       </div>
       <div className="col-span-5">
+        <SaveBar getFormSpec={() => spec} />
         <Toolbar spec={spec} setSpec={setSpec} />
         <BuilderCanvas spec={spec} onSelect={setSelectedId} onMove={moveQuestion} />
         <RuleBuilder spec={spec} setSpec={setSpec} />
