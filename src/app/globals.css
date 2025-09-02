@@ -9,3 +9,7 @@ body { @apply bg-gray-50 text-gray-900; }
 .link { @apply text-blue-600 hover:underline; }
 .table { @apply w-full text-sm; }
 th, td { @apply border-b py-2 text-left; }
+/* globals.css additions (optional sugar) */
+/* .btn { @apply px-3 py-1.5 rounded-md border text-sm hover:bg-muted; } */
+/* .btn-xs { @apply px-2 py-1 text-xs rounded border; } */
+/* .input { @apply w-full px-3 py-1.5 border rounded-md bg-background; } */
