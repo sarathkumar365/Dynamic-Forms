@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <style><![CDATA[
+      .box { fill:#ffffff; stroke:#1f2937; stroke-width:2; rx:8; ry:8; }
+      .title { font: 700 16px Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; fill:#111827; }
+      .field { font: 400 13px Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; fill:#374151; }
+      .note { font: 400 12px Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; fill:#6b7280; }
+      .rel { stroke:#6b7280; stroke-width:2; marker-end:url(#arrow); }
+      .relBold { stroke:#111827; stroke-width:2.5; marker-end:url(#arrow); }
+    ]]></style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="strokeWidth" markerWidth="8" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280" />
+    </marker>
+  </defs>
+
+  <!-- Entities -->
+  <!-- Row 1 -->
+  <g transform="translate(60,40)">
+    <rect class="box" width="220" height="110"/>
+    <text class="title" x="12" y="26">User</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">email (unique)</text>
+    <text class="field" x="12" y="90">createdAt</text>
+  </g>
+
+  <g transform="translate(360,40)">
+    <rect class="box" width="260" height="140"/>
+    <text class="title" x="12" y="26">Form</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">ownerId (FK → User)</text>
+    <text class="field" x="12" y="90">title, description?</text>
+    <text class="field" x="12" y="110">createdAt, updatedAt</text>
+  </g>
+
+  <g transform="translate(680,40)">
+    <rect class="box" width="230" height="120"/>
+    <text class="title" x="12" y="26">Publication</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">formId (FK → Form)</text>
+    <text class="field" x="12" y="90">schema (Json), uiSchema (Json)</text>
+  </g>
+
+  <g transform="translate(950,40)">
+    <rect class="box" width="220" height="140"/>
+    <text class="title" x="12" y="26">ShareLink</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">publicationId (FK → Publication)</text>
+    <text class="field" x="12" y="90">token (unique), isDisabled</text>
+    <text class="field" x="12" y="110">assignedName/email?, note?</text>
+  </g>
+
+  <g transform="translate(1180,260)">
+    <rect class="box" width="200" height="120"/>
+    <text class="title" x="12" y="26">Submission</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">formId (FK → Form)</text>
+    <text class="field" x="12" y="90">shareLinkId? (FK → ShareLink)</text>
+  </g>
+
+  <!-- Row 2 (normalized form tree) -->
+  <g transform="translate(140,260)">
+    <rect class="box" width="200" height="110"/>
+    <text class="title" x="12" y="26">Page</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">formId (FK → Form)</text>
+    <text class="field" x="12" y="90">title, order</text>
+  </g>
+
+  <g transform="translate(380,260)">
+    <rect class="box" width="200" height="110"/>
+    <text class="title" x="12" y="26">Section</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">pageId (FK → Page)</text>
+    <text class="field" x="12" y="90">title, order</text>
+  </g>
+
+  <g transform="translate(620,260)">
+    <rect class="box" width="270" height="150"/>
+    <text class="title" x="12" y="26">Question</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">sectionId (FK → Section)</text>
+    <text class="field" x="12" y="90">key?, label, type, required</text>
+    <text class="field" x="12" y="110">options?, visibleWhen?, disabledWhen?</text>
+    <text class="field" x="12" y="130">order</text>
+  </g>
+
+  <g transform="translate(360,460)">
+    <rect class="box" width="220" height="120"/>
+    <text class="title" x="12" y="26">Rule</text>
+    <text class="field" x="12" y="50">id (PK)</text>
+    <text class="field" x="12" y="70">formId (FK → Form)</text>
+    <text class="field" x="12" y="90">when (Json), then (Json)</text>
+  </g>
+
+  <!-- Relationships -->
+  <!-- User -> Form -->
+  <line class="relBold" x1="280" y1="95" x2="360" y2="95"/>
+  <text class="note" x="300" y="82">1 — N</text>
+
+  <!-- Form -> Page -->
+  <line class="rel" x1="490" y1="180" x2="240" y2="260"/>
+  <text class="note" x="300" y="220">1 — N</text>
+
+  <!-- Page -> Section -->
+  <line class="rel" x1="340" y1="315" x2="380" y2="315"/>
+  <text class="note" x="350" y="300">1 — N</text>
+
+  <!-- Section -> Question -->
+  <line class="rel" x1="580" y1="315" x2="620" y2="315"/>
+  <text class="note" x="595" y="300">1 — N</text>
+
+  <!-- Form -> Rule -->
+  <line class="rel" x1="490" y1="180" x2="470" y2="460"/>
+  <text class="note" x="475" y="300">1 — N</text>
+
+  <!-- Form -> Publication -->
+  <line class="rel" x1="620" y1="110" x2="680" y2="110"/>
+  <text class="note" x="635" y="95">1 — N</text>
+
+  <!-- Publication -> ShareLink -->
+  <line class="rel" x1="910" y1="110" x2="950" y2="110"/>
+  <text class="note" x="920" y="95">1 — N</text>
+
+  <!-- ShareLink -> Submission -->
+  <line class="rel" x1="1060" y1="180" x2="1180" y2="260"/>
+  <text class="note" x="1100" y="225">1 — N</text>
+
+  <!-- Form -> Submission -->
+  <line class="rel" x1="620" y1="110" x2="1180" y2="260"/>
+  <text class="note" x="880" y="190">1 — N</text>
+
+  <!-- Legend -->
+  <g transform="translate(60,620)">
+    <text class="title" x="0" y="0">Legend</text>
+    <text class="field" x="0" y="24">Solid line: parent → children (one‑to‑many)</text>
+    <text class="field" x="0" y="44">Question rules are stored on Question (visibleWhen/disabledWhen)</text>
+    <text class="field" x="0" y="64">Global rules are stored on Form (Rule.when/then)</text>
+  </g>
+</svg>
+

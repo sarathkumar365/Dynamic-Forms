@@ -13,3 +13,19 @@ th, td { @apply border-b py-2 text-left; }
 /* .btn { @apply px-3 py-1.5 rounded-md border text-sm hover:bg-muted; } */
 /* .btn-xs { @apply px-2 py-1 text-xs rounded border; } */
 /* .input { @apply w-full px-3 py-1.5 border rounded-md bg-background; } */
+
+/* Basic styling for react-jsonschema-form (rjsf) so controls are visible without a CSS framework */
+.rjsf .field { @apply mb-4; }
+.rjsf label { @apply block text-sm font-medium mb-1; }
+.rjsf input[type="text"],
+.rjsf input[type="email"],
+.rjsf input[type="number"],
+.rjsf input[type="date"],
+.rjsf input[type="file"],
+.rjsf select,
+.rjsf textarea { @apply w-full border rounded-lg p-2 bg-white; border-color: theme('colors.gray.300'); }
+.rjsf input[disabled],
+.rjsf select[disabled],
+.rjsf textarea[disabled] { @apply bg-gray-100 text-gray-500; }
+.rjsf .help-block { @apply text-xs text-gray-500 mt-1; }
+.rjsf .errors { @apply text-sm text-red-600 mt-1; }

@@ -113,8 +113,24 @@ function evalGroup(formData: any, group: Cond[] | { all?: Cond[]; any?: Cond[] }
   return allOk && anyOk;
 }
 
+const hasRealConds = (vw: VisibleWhen | undefined): boolean => {
+  if (!vw) return false;
+  if (Array.isArray(vw)) {
+    if (vw.length === 0) return false;
+    const first: any = vw[0];
+    if (first && typeof first === "object" && "field" in first) {
+      return (vw as Cond[]).length > 0;
+    }
+    return (vw as Array<{ all?: Cond[]; any?: Cond[] }>).some(
+      (g) => (g.all?.length || 0) > 0 || (g.any?.length || 0) > 0
+    );
+  }
+  const g = vw as { all?: Cond[]; any?: Cond[] };
+  return (g.all?.length || 0) > 0 || (g.any?.length || 0) > 0;
+};
+
 const isVisible = (formData: any, visibleWhen: VisibleWhen | undefined, idToKey: Record<string, string>) => {
-  if (!visibleWhen) return true;
+  if (!hasRealConds(visibleWhen)) return true;
 
   // Support three shapes:
   // 1) Array<Cond> (implicit AND)
@@ -127,8 +143,8 @@ const isVisible = (formData: any, visibleWhen: VisibleWhen | undefined, idToKey:
       // Array<Cond>
       return evalGroup(formData, visibleWhen as Cond[], idToKey);
     }
-    // Array of groups
-    return (visibleWhen as Array<{ all?: Cond[]; any?: Cond[] }>).every((g) => evalGroup(formData, g, idToKey));
+    // Array of groups — visible when ANY group matches
+    return (visibleWhen as Array<{ all?: Cond[]; any?: Cond[] }>).some((g) => evalGroup(formData, g, idToKey));
   }
   // Single group object
   return evalGroup(formData, visibleWhen as { all?: Cond[]; any?: Cond[] }, idToKey);
@@ -190,7 +206,7 @@ export default function PublicFormClient({
         nextUi?.[key]?.disabledWhen ??
         nextUi?.[key]?.["ui:disabledWhen"];
       const disabledWhen: VisibleWhen | undefined = disFromSchema ?? disFromUi;
-      const shouldDisable = disabledWhen
+      const shouldDisable = hasRealConds(disabledWhen)
         ? isVisible(data, disabledWhen, idToKey)
         : false; // only disable when a rule is defined and matches
       if (shouldDisable) {
