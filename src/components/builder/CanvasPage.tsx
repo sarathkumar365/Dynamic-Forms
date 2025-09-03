@@ -4,11 +4,19 @@ import CanvasSection from "./CanvasSection";
 
 export default function CanvasPage({
   page,
+  addSection,
+  addQuickQuestion,
+  activeSectionId,
+  setActiveSectionId,
   onSelect,
   onMove,
   onDelete,
 }: {
   page: FSPage;
+  addSection: (pageId: string) => void;
+  addQuickQuestion: (sectionId: string) => void;
+  activeSectionId: string | null;
+  setActiveSectionId: (id: string | null) => void;
   onSelect: (id: string) => void;
   onMove: (fromId: string, toSectionId: string, toIndex: number) => void;
   onDelete: (id: string) => void;
@@ -21,11 +29,17 @@ export default function CanvasPage({
           <CanvasSection
             key={s.id}
             section={s}
+            addQuickQuestion={addQuickQuestion}
+            active={activeSectionId === s.id}
+            setActive={() => setActiveSectionId(s.id)}
             onSelect={onSelect}
             onMove={onMove}
             onDelete={onDelete}
           />
         ))}
+        <div>
+          <button className="btn btn-sm" onClick={() => addSection(page.id)}>+ Add Section</button>
+        </div>
       </div>
     </div>
   );

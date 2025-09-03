@@ -47,36 +47,27 @@ export function useFormSpec(initial?: FormSpec) {
   const compiled = useMemo(() => compileFormSpec(spec), [spec]);
 
   const addPage = useCallback((title: string = "New Page") => {
+    const newPageId = crypto.randomUUID();
     setSpec((prev: FormSpec) => {
       const next = structuredClone(prev);
-      const newPageId = crypto.randomUUID();
-      next.pages.push({
-        id: newPageId,
-        title,
-        sections: [],
-      });
+      next.pages.push({ id: newPageId, title, sections: [] });
       return next;
     });
+    return newPageId;
   }, []);
 
-  const addSection = useCallback(
-    (pageId: string, title: string = "New Section") => {
-      setSpec((prev: FormSpec) => {
-        const next = structuredClone(prev);
-        const page = next.pages.find((p: FSPage) => p.id === pageId);
-        if (page) {
-          const sectionId = crypto.randomUUID();
-          page.sections.push({
-            id: sectionId,
-            title,
-            questions: [],
-          });
-        }
-        return next;
-      });
-    },
-    []
-  );
+  const addSection = useCallback((pageId: string, title: string = "New Section") => {
+    const sectionId = crypto.randomUUID();
+    setSpec((prev: FormSpec) => {
+      const next = structuredClone(prev);
+      const page = next.pages.find((p: FSPage) => p.id === pageId);
+      if (page) {
+        page.sections.push({ id: sectionId, title, questions: [] });
+      }
+      return next;
+    });
+    return sectionId;
+  }, []);
 
   const addQuestion = useCallback((sectionId: string, q: FSQuestion) => {
     setSpec((prev) => {

@@ -214,4 +214,3 @@ Entity relationships:
 
 --------------------------------------------------------------------------------
 
-If anything’s unclear or you want deeper docs (diagrams, sequence flows, or examples), please ask and I’ll extend this guide.
