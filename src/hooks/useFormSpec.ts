@@ -69,6 +69,17 @@ export function useFormSpec(initial?: FormSpec) {
     return sectionId;
   }, []);
 
+  const updateSection = useCallback((sectionId: string, patch: Partial<FSSection>) => {
+    setSpec((prev: FormSpec) => {
+      const next = structuredClone(prev);
+      for (const p of next.pages) {
+        const s = p.sections.find((sec) => sec.id === sectionId);
+        if (s) Object.assign(s, patch);
+      }
+      return next;
+    });
+  }, []);
+
   const addQuestion = useCallback((sectionId: string, q: FSQuestion) => {
     setSpec((prev) => {
       const next = structuredClone(prev);
@@ -259,6 +270,7 @@ export function useFormSpec(initial?: FormSpec) {
     compiled,
     addPage,
     addSection,
+    updateSection,
     addQuestion,
     updateQuestion,
     moveQuestion,

@@ -6,6 +6,7 @@ export default function BuilderCanvas({
   spec,
   addPage,
   addSection,
+  updateSection,
   addQuickQuestion,
   activeSectionId,
   setActiveSectionId,
@@ -16,6 +17,7 @@ export default function BuilderCanvas({
   spec: FormSpec;
   addPage: (title?: string) => void;
   addSection: (pageId: string) => void;
+  updateSection: (sectionId: string, patch: Partial<{ title: string }>) => void;
   addQuickQuestion: (sectionId: string) => void;
   activeSectionId: string | null;
   setActiveSectionId: (id: string | null) => void;
@@ -39,6 +41,7 @@ export default function BuilderCanvas({
           key={p.id}
           page={p}
           addSection={addSection}
+          updateSection={updateSection}
           addQuickQuestion={addQuickQuestion}
           activeSectionId={activeSectionId}
           setActiveSectionId={setActiveSectionId}

@@ -5,6 +5,7 @@ import CanvasSection from "./CanvasSection";
 export default function CanvasPage({
   page,
   addSection,
+  updateSection,
   addQuickQuestion,
   activeSectionId,
   setActiveSectionId,
@@ -14,6 +15,7 @@ export default function CanvasPage({
 }: {
   page: FSPage;
   addSection: (pageId: string) => void;
+  updateSection: (sectionId: string, patch: Partial<{ title: string }>) => void;
   addQuickQuestion: (sectionId: string) => void;
   activeSectionId: string | null;
   setActiveSectionId: (id: string | null) => void;
@@ -30,6 +32,7 @@ export default function CanvasPage({
             key={s.id}
             section={s}
             addQuickQuestion={addQuickQuestion}
+            updateSection={updateSection}
             active={activeSectionId === s.id}
             setActive={() => setActiveSectionId(s.id)}
             onSelect={onSelect}

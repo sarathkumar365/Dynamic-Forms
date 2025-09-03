@@ -106,6 +106,8 @@ What happens:
 - Copies question‑level `visibleWhen` / `disabledWhen` into both `uiSchema` and property `ui:options`.
 - Converts top‑level rules into JSON Schema `allOf` with `if`/`then` blocks.
 
+For a detailed walkthrough, see: `docs/compile-formspec-deep-dive.md:1`
+
 --------------------------------------------------------------------------------
 
 **Public Rendering and Rules Execution**
@@ -213,4 +215,3 @@ Entity relationships:
 - DB errors locally: Verify `DATABASE_URL` and that migrations ran. Use `scripts/clearDb.ts` to reset dev data.
 
 --------------------------------------------------------------------------------
-

@@ -17,6 +17,7 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
     compiled,
     addPage,
     addSection,
+    updateSection,
     addQuestion,
     updateQuestion,
     moveQuestion,
@@ -74,6 +75,7 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
       setActiveSectionId(id);
     }
   };
+  console.log(spec,"Spec");
 
   return (
     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-8rem)]">
@@ -95,6 +97,7 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
           spec={spec}
           addPage={addPage}
           addSection={addSection}
+          updateSection={updateSection}
           activeSectionId={activeSectionId}
           setActiveSectionId={setActiveSectionId}
           addQuickQuestion={(sectionId) =>
