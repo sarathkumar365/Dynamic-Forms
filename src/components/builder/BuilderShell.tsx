@@ -7,6 +7,7 @@ import RuleBuilder from "./RuleBuilder";
 import ActionRules from "./ActionRules";
 import BuilderTopBar from "./BuilderTopBar";
 import PreviewDrawer from "./PreviewDrawer";
+import SpecViewerModal from "./SpecViewerModal";
 import SaveBar from "./SaveBar";
 import React, { useEffect, useState } from "react";
 
@@ -29,6 +30,7 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
   );
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [previewWidth, setPreviewWidth] = useState<number>(380);
+  const [showSpecViewer, setShowSpecViewer] = useState(false);
 
   // restore persisted preview state
   useEffect(() => {
@@ -92,6 +94,7 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
           onOpenRules={() => setShowRules(true)}
           previewOpen={previewOpen}
           onTogglePreview={() => setPreviewOpen((v) => !v)}
+          onOpenSpecViewer={() => setShowSpecViewer(true)}
         />
         <BuilderCanvas
           spec={spec}
@@ -139,6 +142,10 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
         onResize={(w) => setPreviewWidth(w)}
         compiled={compiled}
       />
+
+      {showSpecViewer && (
+        <SpecViewerModal spec={spec} compiled={compiled} onClose={() => setShowSpecViewer(false)} />
+      )}
     </div>
   );
 }

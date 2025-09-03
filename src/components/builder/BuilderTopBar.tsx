@@ -8,11 +8,13 @@ export default function BuilderTopBar({
   onOpenRules,
   previewOpen,
   onTogglePreview,
+  onOpenSpecViewer,
 }: {
   getFormSpec: () => any;
   onOpenRules: () => void;
   previewOpen: boolean;
   onTogglePreview: () => void;
+  onOpenSpecViewer: () => void;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -71,6 +73,7 @@ export default function BuilderTopBar({
       </button>
       <button className="btn" onClick={onOpenRules}>Rules</button>
       <button className="btn" onClick={onTogglePreview}>{previewOpen ? 'Hide Preview' : 'Show Preview'}</button>
+      <button className="btn" onClick={onOpenSpecViewer}>View JSON</button>
       {status === "error" && <span className="text-sm text-red-600">{error}</span>}
     </div>
   );
