@@ -4,8 +4,8 @@ import QuestionPalette from "./QuestionPalette";
 import BuilderCanvas from "./BuilderCanvas";
 import Inspector from "./Inspector";
 import RuleBuilder from "./RuleBuilder";
+import ActionRules from "./ActionRules";
 import PreviewPane from "./PreviewPane";
-import Toolbar from "./Toolbar";
 import SaveBar from "./SaveBar";
 import { useState } from "react";
 
@@ -14,6 +14,8 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
     spec,
     setSpec,
     compiled,
+    addPage,
+    addSection,
     addQuestion,
     updateQuestion,
     moveQuestion,
@@ -21,9 +23,28 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
   } = useFormSpec(initialSpec);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Helper: add section to first page
+  const handleAddSection = () => {
+    if (spec.pages.length > 0) {
+      addSection(spec.pages[0].id);
+    }
+  };
+
   return (
     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-8rem)]">
       <div className="col-span-2">
+        <div className="mb-4 space-y-2">
+          <button className="btn w-full" onClick={() => addPage()}>
+            + Add Page
+          </button>
+          <button
+            className="btn w-full"
+            onClick={handleAddSection}
+            disabled={spec.pages.length === 0}
+          >
+            + Add Section
+          </button>
+        </div>
         <QuestionPalette
           onAdd={(sectionId, q) => addQuestion(sectionId, q)}
           spec={spec}
@@ -31,14 +52,14 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
       </div>
       <div className="col-span-5">
         <SaveBar getFormSpec={() => spec} />
-        <Toolbar spec={spec} setSpec={setSpec} />
         <BuilderCanvas
           spec={spec}
           onSelect={setSelectedId}
           onMove={moveQuestion}
           onDelete={deleteQuestion}
         />
-        <RuleBuilder spec={spec} setSpec={setSpec} />
+        {/* Global rules editor */}
+        <ActionRules spec={spec} setSpec={setSpec} />
       </div>
       <div className="col-span-2">
         <Inspector

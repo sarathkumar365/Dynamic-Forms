@@ -1,15 +1,16 @@
-const { prisma } = require("../src/lib/prisma");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 async function main() {
   await prisma.submission.deleteMany({});
   await prisma.shareLink.deleteMany({});
   await prisma.publication.deleteMany({});
-  await prisma.template.deleteMany({});
-  // Optionally, delete users if you want a full reset:
-  // await prisma.user.deleteMany({});
-  console.log(
-    "Database cleared: submissions, shareLinks, publications, templates."
-  );
+  await prisma.question.deleteMany({});
+  await prisma.section.deleteMany({});
+  await prisma.page.deleteMany({});
+  await prisma.form.deleteMany({});
+  // await prisma.user.deleteMany({}); // Optional
+  console.log("Database cleared: all form-related tables.");
 }
 
 main()

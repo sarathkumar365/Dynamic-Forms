@@ -1,26 +1,38 @@
 export type FSId = string;
 
 export type FSQuestionType =
-  | "text" | "email" | "number" | "integer" | "boolean"
-  | "date" | "select" | "multiselect" | "file";
+  | "text"
+  | "email"
+  | "number"
+  | "integer"
+  | "boolean"
+  | "date"
+  | "select"
+  | "multiselect"
+  | "file";
 
-export interface FSOption { value: string; label: string }
+export interface FSOption {
+  value: string;
+  label: string;
+}
 
 export interface FSVisibleWhenClause {
-  all?: Array<{ field: FSId; eq?: string | number | boolean; ne?: any }>;
-  any?: Array<{ field: FSId; eq?: string | number | boolean; ne?: any }>;
+  // field should be the question's key, not id
+  all?: Array<{ field: string; eq?: string | number | boolean; ne?: any }>;
+  any?: Array<{ field: string; eq?: string | number | boolean; ne?: any }>;
 }
 
 export interface FSQuestion {
   id: FSId;
-  key?: string;             // human-friendly data key ("name", "mobile")
+  key?: string; // human-friendly data key ("name", "mobile")
   type: FSQuestionType;
   label: string;
   required?: boolean;
   help?: string;
   placeholder?: string;
-  options?: FSOption[];          // for select/multiselect
+  options?: FSOption[]; // for select/multiselect
   visibleWhen?: FSVisibleWhenClause[];
+  disabledWhen?: FSVisibleWhenClause[];
   meta?: Record<string, any>;
 }
 
@@ -37,13 +49,20 @@ export interface FSPage {
 }
 
 export interface FSRuleActionSetRequired {
-  op: "setRequired"; field: FSId; value: boolean;
+  op: "setRequired";
+  field: FSId;
+  value: boolean;
 }
 export interface FSRuleActionSetConst {
-  op: "setConst"; field: FSId; value: string | number | boolean;
+  op: "setConst";
+  field: FSId;
+  value: string | number | boolean;
 }
 export interface FSRuleActionSetEnum {
-  op: "setEnum"; field: FSId; values: string[]; labels?: string[];
+  op: "setEnum";
+  field: FSId;
+  values: string[];
+  labels?: string[];
 }
 
 export type FSRuleAction =

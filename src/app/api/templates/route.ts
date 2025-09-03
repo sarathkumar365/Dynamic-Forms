@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { resolveOwner } from "@/lib/owner"
-
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { resolveOwner } from "@/lib/owner";
 
 export async function GET() {
-  const owner = await resolveOwner()
-  const items = await prisma.template.findMany({ where: { ownerId: owner.id }, orderBy: { updatedAt: 'desc' } })
-  return Response.json(items)
+  const owner = await resolveOwner();
+  const items = await prisma.form.findMany({
+    where: { ownerId: owner.id },
+    orderBy: { updatedAt: "desc" },
+  });
+  return Response.json(items);
 }
 
 // export async function POST(req: Request) {
@@ -23,17 +25,28 @@ export async function GET() {
 //   })
 //   return Response.json({ id: created.id })
 // }
+
 export async function POST(req: Request) {
-  const body = await req.json()
-  const { name, description, formSpec } = body
-  if (!name || !formSpec) {
-    return NextResponse.json({ error: "name and formSpec are required" }, { status: 400 })
+  const body = await req.json();
+  const { title, description, pages, rules } = body;
+  if (!title || !pages) {
+    return NextResponse.json(
+      { error: "title and pages are required" },
+      { status: 400 }
+    );
   }
-  const owner = await resolveOwner()
-  const tpl = await prisma.template.create({
-    data: { ownerId: owner.id, name, description, formSpec }
-  })
-  return NextResponse.json({ id: tpl.id })
+  const owner = await resolveOwner();
+  const form = await prisma.form.create({
+    data: {
+      ownerId: owner.id,
+      title,
+      description,
+      pages: {
+        create: pages,
+      },
+      rules: rules ? { create: rules } : undefined,
+    },
+    include: { pages: true, rules: true },
+  });
+  return NextResponse.json({ id: form.id });
 }
-
-

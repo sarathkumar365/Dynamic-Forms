@@ -17,23 +17,27 @@
 // }
 
 // src/app/api/public/[token]/submit/route.ts
-import { prisma } from '@/lib/prisma'
+import { prisma } from "@/lib/prisma";
 
-export async function POST(req: Request, { params }: { params: { token: string }}) {
+export async function POST(
+  req: Request,
+  { params }: { params: { token: string } }
+) {
   const share = await prisma.shareLink.findUnique({
-    where: { token: params.token }
-  })
-  if (!share || share.isDisabled) return new Response('Not found', { status: 404 })
+    where: { token: params.token },
+    include: { publication: true },
+  });
+  if (!share || share.isDisabled || !share.publication)
+    return new Response("Not found", { status: 404 });
 
-  const body = await req.json()
+  const body = await req.json();
   await prisma.submission.create({
     data: {
-      publicationId: share.publicationId,
+      formId: share.publication.formId,
       shareLinkId: share.id,
       payload: body?.payload ?? {},
-      meta: body?.meta ?? undefined,
-    }
-  })
+    },
+  });
 
-  return Response.json({ ok: true })
+  return Response.json({ ok: true });
 }

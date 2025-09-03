@@ -29,6 +29,9 @@ export default function Inspector({
       <div className="text-sm text-muted-foreground">Select a question…</div>
     );
 
+  // Prompt for key if missing
+  const needsKey = !q.key || q.key.trim() === "";
+
   return (
     <div className="space-y-3">
       <h3 className="font-semibold">Inspector</h3>
@@ -48,6 +51,20 @@ export default function Inspector({
           onChange={(e) => updateQuestion(q.id, { help: e.target.value })}
         />
       </label>
+      <label className="block text-sm">
+        Key
+        <input
+          className="input w-full"
+          value={q.key ?? ""}
+          onChange={(e) => updateQuestion(q.id, { key: e.target.value })}
+          placeholder="Required for rules (e.g. age, country)"
+        />
+      </label>
+      {needsKey && (
+        <div className="text-xs text-red-600">
+          Set a unique key for this question to use it in rules.
+        </div>
+      )}
       <label className="inline-flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -60,7 +77,11 @@ export default function Inspector({
         <OptionsEditor q={q} update={updateQuestion} />
       )}
       <div className="mt-2">
-        <button className="btn btn-sm" onClick={() => setShowRuleModal(true)}>
+        <button
+          className="btn btn-sm"
+          onClick={() => setShowRuleModal(true)}
+          disabled={needsKey}
+        >
           Add Show/Hide Rule
         </button>
       </div>

@@ -1,8 +1,12 @@
-# JSON-Driven Dynamic Form POC (SQLite-safe)
+# JSON-Driven Dynamic Form POC
 
-This variant stores JSON as **strings** to be compatible with SQLite (Prisma does not support `Json` type on SQLite). The app:
+This app lets you build forms from a custom FormSpec, compile them to JSON Schema + UI Schema, publish immutable snapshots, generate share links, render public forms, and collect submissions.
+
+It now uses Prisma with PostgreSQL (Json columns) for storage.
+
+The app:
 - Accepts a JSON Schema + optional UI Schema
-- Saves it as a Template
+- Saves it as a Form
 - Publishes an immutable snapshot (Publication)
 - Generates share links
 - Renders a public form at `/f/{token}` using @rjsf/core
@@ -12,7 +16,7 @@ This variant stores JSON as **strings** to be compatible with SQLite (Prisma doe
 
 ## Tech
 - Next.js 14 (App Router), React 18, TypeScript
-- Prisma + SQLite
+- Prisma + PostgreSQL
 - @rjsf/core (react-jsonschema-form)
 - Tailwind
 
@@ -29,8 +33,9 @@ npm run dev
 Open http://localhost:3000
 
 ## Notes
-- JSON is stored in TEXT columns; UI parses/pretty-prints where needed.
-- To switch to Postgres later, change `datasource db` provider, set `DATABASE_URL`, and convert fields to `Json`.
+- Database uses Postgres with Prisma `Json` columns for compiled schemas and submissions.
+- If you prefer SQLite, change the Prisma `datasource` provider to `sqlite`, convert `Json` fields to `String` (TEXT) and stringify/parse at the API boundaries.
+- Do not commit real API keys to `.env`.
 
 
 ---
@@ -54,4 +59,4 @@ This repo includes a **.devcontainer**. Two ways:
 
 **Notes:**
 - The devcontainer uses Node 22 image and auto-runs `prisma generate` + `prisma migrate dev` on first create.
-- SQLite database file lives at `./dev.db`. For a clean slate, stop the dev server, delete the file, and `npx prisma migrate dev` again.
+- Ensure `DATABASE_URL` points to a reachable Postgres instance.

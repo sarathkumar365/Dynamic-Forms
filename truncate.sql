@@ -1,1 +1,11 @@
-TRUNCATE TABLE "Submission", "ShareLink", "Publication", "Template", "User" RESTART IDENTITY CASCADE;
+TRUNCATE TABLE 
+  "Submission", 
+  "ShareLink", 
+  "Publication", 
+  "Rule",
+  "Question",
+  "Section",
+  "Page",
+  "Form",
+  "User"
+RESTART IDENTITY CASCADE;

@@ -4,8 +4,13 @@ import { nanoid } from '@/lib/id'
 
 export async function POST(_: Request, { params }: { params: { id: string }}) {
   const owner = await resolveOwner()
-  const pub = await prisma.publication.findFirst({ where: { id: params.id, ownerId: owner.id } })
-  if (!pub) return new Response('Not found', { status: 404 })
+  const pub = await prisma.publication.findFirst({
+    where: { id: params.id },
+    include: { form: true },
+  })
+  if (!pub || !pub.form || pub.form.ownerId !== owner.id) {
+    return new Response('Not found', { status: 404 })
+  }
   const link = await prisma.shareLink.create({
     data: { publicationId: pub.id, token: nanoid(16) }
   })

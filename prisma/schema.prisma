@@ -1,3 +1,27 @@
+model Publication {
+  id         String      @id @default(cuid())
+  form       Form        @relation(fields: [formId], references: [id])
+  formId     String
+  title      String
+  schema     Json
+  uiSchema   Json?
+  createdAt  DateTime    @default(now())
+  shareLinks ShareLink[]
+}
+
+model ShareLink {
+  id            String       @id @default(cuid())
+  publication   Publication  @relation(fields: [publicationId], references: [id])
+  publicationId String
+  token         String       @unique
+  isDisabled    Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  submissions   Submission[]
+  assignedName   String?
+  assignedEmail  String?
+  note           String?
+}
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,77 +32,82 @@ datasource db {
 }
 
 model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  forms     Form[]
+}
+
+model Form {
   id           String        @id @default(cuid())
-  email        String        @unique
+  ownerId      String
+  owner        User          @relation(fields: [ownerId], references: [id])
+  title        String
+  description  String?
+  pages        Page[]
+  rules        Rule[]
+  submissions  Submission[]
   createdAt    DateTime      @default(now())
-  templates    Template[]
+  updatedAt    DateTime      @updatedAt
   publications Publication[]
 }
 
-model Template {
-  id          String      @id @default(cuid())
-  ownerId     String
-  owner       User        @relation(fields: [ownerId], references: [id])
+model Page {
+  id       String    @id @default(cuid())
+  title    String
+  form     Form      @relation(fields: [formId], references: [id])
+  formId   String
+  sections Section[]
+  order    Int
+}
 
-  name        String
+model Section {
+  id        String     @id @default(cuid())
+  title     String
+  page      Page       @relation(fields: [pageId], references: [id])
+  pageId    String
+  questions Question[]
+  order     Int
+}
+
+model Question {
+  id          String  @id @default(cuid())
+  key         String?
+  label       String
+  type        String
+  required    Boolean @default(false)
+  help        String?
+  placeholder String?
+  options     Json?
+  visibleWhen Json?
+  section     Section @relation(fields: [sectionId], references: [id])
+  sectionId   String
+  order       Int
+}
+
+model Rule {
+  id          String  @id @default(cuid())
   description String?
-
-  // NEW: friendly authoring spec (FormSpec JSONB)
-  formSpec    Json
-
-  // (Optional legacy; can remove later if unused)
-  schema      Json?
-  uiSchema    Json?
-
-  version     Int         @default(1)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  publications Publication[]
-}
-
-model Publication {
-  id          String      @id @default(cuid())
-  ownerId     String
-  owner       User        @relation(fields: [ownerId], references: [id])
-
-  templateId  String
-  template    Template    @relation(fields: [templateId], references: [id])
-
-  title       String
-  schema      Json        // compiled snapshot (JSONB)
-  uiSchema    Json?
-  createdAt   DateTime    @default(now())
-
-  shareLinks  ShareLink[]
-  submissions Submission[]
-}
-
-model ShareLink {
-  id            String       @id @default(cuid())
-  publicationId String
-  publication   Publication  @relation(fields: [publicationId], references: [id])
-  token         String       @unique
-  isDisabled    Boolean      @default(false)
-  assignedName  String?
-  assignedEmail String?
-  note          String?
-  createdAt     DateTime     @default(now())
-
-  submissions   Submission[]
+  when        Json
+  then        Json
+  form        Form    @relation(fields: [formId], references: [id])
+  formId      String
 }
 
 model Submission {
-  id            String       @id @default(cuid())
-  publicationId String
-  publication   Publication  @relation(fields: [publicationId], references: [id])
-
-  shareLinkId   String?
-  shareLink     ShareLink?   @relation(fields: [shareLinkId], references: [id])
-
-  payload       Json         // JSONB
-  meta          Json?
-  createdAt     DateTime     @default(now())
-
-  @@index([publicationId, createdAt])
+  id          String     @id @default(cuid())
+  form        Form       @relation(fields: [formId], references: [id])
+  formId      String
+  payload     Json
+  createdAt   DateTime   @default(now())
+  shareLink   ShareLink? @relation(fields: [shareLinkId], references: [id])
+  shareLinkId String?
 }
+
+// model Template {
+//   id          String   @id @default(cuid())
+//   ownerId     String
+//   name        String
+//   description String?
+//   formSpec    Json
+// }
