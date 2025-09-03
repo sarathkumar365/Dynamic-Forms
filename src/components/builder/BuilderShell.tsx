@@ -10,22 +10,42 @@ import SaveBar from "./SaveBar";
 import { useState } from "react";
 
 export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
-  const { spec, setSpec, compiled, addQuestion, updateQuestion, moveQuestion } = useFormSpec(initialSpec);
+  const {
+    spec,
+    setSpec,
+    compiled,
+    addQuestion,
+    updateQuestion,
+    moveQuestion,
+    deleteQuestion,
+  } = useFormSpec(initialSpec);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   return (
     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-8rem)]">
       <div className="col-span-2">
-        <QuestionPalette onAdd={(sectionId, q) => addQuestion(sectionId, q)} spec={spec} />
+        <QuestionPalette
+          onAdd={(sectionId, q) => addQuestion(sectionId, q)}
+          spec={spec}
+        />
       </div>
       <div className="col-span-5">
         <SaveBar getFormSpec={() => spec} />
         <Toolbar spec={spec} setSpec={setSpec} />
-        <BuilderCanvas spec={spec} onSelect={setSelectedId} onMove={moveQuestion} />
+        <BuilderCanvas
+          spec={spec}
+          onSelect={setSelectedId}
+          onMove={moveQuestion}
+          onDelete={deleteQuestion}
+        />
         <RuleBuilder spec={spec} setSpec={setSpec} />
       </div>
       <div className="col-span-2">
-        <Inspector spec={spec} selectedId={selectedId} updateQuestion={updateQuestion} />
+        <Inspector
+          spec={spec}
+          selectedId={selectedId}
+          updateQuestion={updateQuestion}
+        />
       </div>
       <div className="col-span-3">
         <PreviewPane compiled={compiled} />
