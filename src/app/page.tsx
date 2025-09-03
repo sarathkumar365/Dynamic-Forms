@@ -13,77 +13,55 @@ export default async function Page() {
   const publications = await prisma.publication.findMany({
     where: { formId: { in: formIds } },
     orderBy: { createdAt: "desc" },
+    take: 10,
   });
 
   return (
     <div className="space-y-6">
-      {/* NEW: Mode picker */}
-      <section className="card">
-        <h2 className="text-lg font-semibold mb-2">Create a new form</h2>
-        <p className="text-sm text-gray-600 mb-3">
-          Choose how you want to build your form.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link href="/templates/new?mode=ai" className="btn">
-            ✨ Use AI
-          </Link>
-          <Link href="/templates/new?mode=manual" className="btn">
-            🛠️ Create Manually
-          </Link>
-        </div>
-      </section>
+      {/* Action bar */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Forms</h1>
+        <Link href="/templates/new" className="btn">+ New Form</Link>
+      </div>
 
+      {/* Forms grid */}
       <section className="card">
-        <h2 className="text-lg font-semibold mb-2">Forms</h2>
-        <div className="mb-3">
-          <Link href="/forms/new" className="btn">
-            + New Form
-          </Link>
-        </div>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Publications</th>
-            </tr>
-          </thead>
-          <tbody>
+        {forms.length === 0 ? (
+          <div className="text-sm text-gray-600">No forms yet. Click “New Form” to get started.</div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-3">
             {forms.map((f) => (
-              <tr key={f.id}>
-                <td>
-                  <Link className="link" href={`/forms/${f.id}`}>
-                    {f.title}
-                  </Link>
-                </td>
-                <td>{f.publications.length}</td>
-              </tr>
+              <Link key={f.id} href={`/forms/${f.id}`} className="block rounded-xl border p-4 hover:bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">{f.title}</div>
+                  <span className="badge">{f.publications.length} published</span>
+                </div>
+                {f.description ? (
+                  <div className="text-sm text-gray-600 mt-1 line-clamp-2">{f.description}</div>
+                ) : null}
+              </Link>
             ))}
-          </tbody>
-        </table>
+          </div>
+        )}
       </section>
 
+      {/* Recent publications */}
       <section className="card">
-        <h2 className="text-lg font-semibold mb-2">Publications</h2>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold">Recent Publications</h2>
+        </div>
+        {publications.length === 0 ? (
+          <div className="text-sm text-gray-600">No publications yet.</div>
+        ) : (
+          <ul className="divide-y">
             {publications.map((p) => (
-              <tr key={p.id}>
-                <td>
-                  <Link className="link" href={`/publications/${p.id}`}>
-                    {p.title}
-                  </Link>
-                </td>
-                <td>{new Date(p.createdAt).toLocaleString()}</td>
-              </tr>
+              <li key={p.id} className="py-2 flex items-center justify-between">
+                <Link className="link" href={`/publications/${p.id}`}>{p.title}</Link>
+                <span className="text-xs text-gray-500">{new Date(p.createdAt).toLocaleString()}</span>
+              </li>
             ))}
-          </tbody>
-        </table>
+          </ul>
+        )}
       </section>
     </div>
   );

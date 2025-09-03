@@ -6,9 +6,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="bg-white border-b">
           <div className="container py-4 flex items-center justify-between">
-            <Link href="/" className="text-xl font-semibold">JSON Form POC</Link>
+            <Link href="/" className="text-xl font-semibold">FormSpec Studio</Link>
             <nav className="flex items-center gap-4">
-              <Link className="link" href="/templates/new">New Template</Link>
+              <Link className="btn" href="/templates/new">+ New Form</Link>
             </nav>
           </div>
         </header>
