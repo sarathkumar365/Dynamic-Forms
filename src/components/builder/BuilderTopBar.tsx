@@ -6,9 +6,13 @@ import { ensureKeys } from "@/hooks/useFormSpec";
 export default function BuilderTopBar({
   getFormSpec,
   onOpenRules,
+  previewOpen,
+  onTogglePreview,
 }: {
   getFormSpec: () => any;
   onOpenRules: () => void;
+  previewOpen: boolean;
+  onTogglePreview: () => void;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -66,8 +70,8 @@ export default function BuilderTopBar({
         {status === "saving" ? "Saving…" : "Save"}
       </button>
       <button className="btn" onClick={onOpenRules}>Rules</button>
+      <button className="btn" onClick={onTogglePreview}>{previewOpen ? 'Hide Preview' : 'Show Preview'}</button>
       {status === "error" && <span className="text-sm text-red-600">{error}</span>}
     </div>
   );
 }
-

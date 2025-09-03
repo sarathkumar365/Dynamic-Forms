@@ -6,9 +6,9 @@ import Inspector from "./Inspector";
 import RuleBuilder from "./RuleBuilder";
 import ActionRules from "./ActionRules";
 import BuilderTopBar from "./BuilderTopBar";
-import PreviewPane from "./PreviewPane";
+import PreviewDrawer from "./PreviewDrawer";
 import SaveBar from "./SaveBar";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
   const {
@@ -26,6 +26,45 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(
     spec.pages?.[0]?.sections?.[0]?.id ?? null
   );
+  const [previewOpen, setPreviewOpen] = useState<boolean>(false);
+  const [previewWidth, setPreviewWidth] = useState<number>(380);
+
+  // restore persisted preview state
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem("builder.preview.state");
+      if (s) {
+        const obj = JSON.parse(s);
+        if (typeof obj.open === 'boolean') setPreviewOpen(obj.open);
+        if (typeof obj.width === 'number') setPreviewWidth(obj.width);
+      } else {
+        // default: open on desktop, closed on mobile
+        setPreviewOpen(typeof window !== 'undefined' ? window.innerWidth >= 1024 : false);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("builder.preview.state", JSON.stringify({ open: previewOpen, width: previewWidth }));
+    } catch {}
+  }, [previewOpen, previewWidth]);
+
+  // Keyboard shortcut: P to toggle preview (ignores inputs)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key?.toLowerCase();
+      if (k === 'p' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const el = e.target as HTMLElement | null;
+        const tag = el?.tagName?.toLowerCase();
+        const isEditable = (el as any)?.isContentEditable;
+        if (isEditable || (tag && ["input","textarea","select"].includes(tag))) return;
+        e.preventDefault();
+        setPreviewOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const [showRules, setShowRules] = useState(false);
 
   // Helper: add section to first page
@@ -46,7 +85,12 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
         />
       </div>
       <div className="col-span-5">
-        <BuilderTopBar getFormSpec={() => spec} onOpenRules={() => setShowRules(true)} />
+        <BuilderTopBar
+          getFormSpec={() => spec}
+          onOpenRules={() => setShowRules(true)}
+          previewOpen={previewOpen}
+          onTogglePreview={() => setPreviewOpen((v) => !v)}
+        />
         <BuilderCanvas
           spec={spec}
           addPage={addPage}
@@ -84,9 +128,14 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
           updateQuestion={updateQuestion}
         />
       </div>
-      <div className="col-span-3">
-        <PreviewPane compiled={compiled} />
-      </div>
+      {/* Right-docked Preview Drawer (overlays grid) */}
+      <PreviewDrawer
+        open={previewOpen}
+        width={previewWidth}
+        onToggle={() => setPreviewOpen(false)}
+        onResize={(w) => setPreviewWidth(w)}
+        compiled={compiled}
+      />
     </div>
   );
 }
