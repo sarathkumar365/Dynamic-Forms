@@ -11,19 +11,20 @@ export default async function FormPage({ params }: { params: { id: string } }) {
     include: { publications: true },
   });
   if (!form) return notFound();
+  const formId = form.id;
 
   // Server action that calls the correct API route
   async function publishAction() {
     "use server";
     const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const res = await fetch(`${base}/api/templates/${form.id}/publish`, {
+    const res = await fetch(`${base}/api/templates/${formId}/publish`, {
       method: "POST",
     });
+    const data = await res.json().catch(() => ({} as any));
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data?.error || "Publish failed");
+      throw new Error((data as any)?.error || "Publish failed");
     }
-    const pub = await res.json();
+    const pub = data as any;
     redirect(`/publications/${pub.id}`);
   }
 

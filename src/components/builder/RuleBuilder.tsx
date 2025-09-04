@@ -94,11 +94,13 @@ export default function RuleBuilder({
   }
 
   function removeHideRule(idx: number) {
+    if (!question) return;
     const next = (question.visibleWhen ?? []).slice();
     next.splice(idx, 1);
     updateQuestion(question.id, { visibleWhen: next });
   }
   function removeDisableRule(idx: number) {
+    if (!question) return;
     const next = (question.disabledWhen ?? []).slice();
     next.splice(idx, 1);
     updateQuestion(question.id, { disabledWhen: next });
@@ -317,4 +319,3 @@ function fmtVal(c: any) {
   const v = c.eq ?? c.ne ?? c.gt ?? c.gte ?? c.lt ?? c.lte ?? (c.in ? c.in.join(", ") : c.nin?.join(", "));
   return String(v);
 }
-

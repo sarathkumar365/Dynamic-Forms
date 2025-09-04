@@ -93,7 +93,7 @@ export function schemaToFormSpec(schema: any): { spec: FormSpec; warnings: strin
   const allOf = Array.isArray(schema.allOf) ? schema.allOf : [];
   const ruleSources = [] as any[];
   if (schema.if && schema.then) ruleSources.push({ if: schema.if, then: schema.then });
-  ruleSources.push(...allOf.filter((x) => x && typeof x === "object" && x.if && x.then));
+  ruleSources.push(...allOf.filter((x: any) => x && typeof x === "object" && x.if && x.then));
 
   const keyExists = new Set<string>();
   defaultQuestions.forEach((q) => q.key && keyExists.add(q.key));

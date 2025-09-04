@@ -1,13 +1,20 @@
 "use client";
 
 import BuilderShell from "@/components/builder/BuilderShell";
-import { newEmptySpec } from "@/lib/formspec/defaults";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 export default function NewFormPage() {
+  return (
+    <Suspense fallback={<div className="p-6" />}> 
+      <NewFormInner />
+    </Suspense>
+  );
+}
+
+function NewFormInner() {
   const sp = useSearchParams();
   const showImport = sp.get("import") === "1" || sp.get("import") === "true";
-  // You may want to use a normalized empty form object here
   const initial = {
     title: "New Form",
     description: "",

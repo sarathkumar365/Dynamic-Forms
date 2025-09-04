@@ -258,7 +258,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
               </div>
               {fi?.samples && fi.samples.length ? (
                 <div className="flex flex-wrap gap-1 ml-1">
-                  {fi.samples.slice(0,8).map((s)=>(
+                  {fi.samples.slice(0,8).map((s: string)=>(
                     <button key={s} className="btn-base btn-ghost btn-xs" onClick={()=>{
                       if (valueIsList) {
                         const cur = f.value ? f.value.split(',').map(x=>x.trim()).filter(Boolean) : [];
