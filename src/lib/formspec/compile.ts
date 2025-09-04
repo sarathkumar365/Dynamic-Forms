@@ -8,9 +8,23 @@ const qToSchema = (q: FSQuestion) => {
     case "email":
       return { type: "string", format: "email", title: q.label };
     case "number":
-      return { type: "number", title: q.label };
+      return {
+        type: "number",
+        title: q.label,
+        ...(q.meta?.minimum !== undefined ? { minimum: q.meta.minimum } : {}),
+        ...(q.meta?.maximum !== undefined ? { maximum: q.meta.maximum } : {}),
+        ...(q.meta?.exclusiveMinimum !== undefined ? { exclusiveMinimum: q.meta.exclusiveMinimum } : {}),
+        ...(q.meta?.exclusiveMaximum !== undefined ? { exclusiveMaximum: q.meta.exclusiveMaximum } : {}),
+      };
     case "integer":
-      return { type: "integer", title: q.label };
+      return {
+        type: "integer",
+        title: q.label,
+        ...(q.meta?.minimum !== undefined ? { minimum: q.meta.minimum } : {}),
+        ...(q.meta?.maximum !== undefined ? { maximum: q.meta.maximum } : {}),
+        ...(q.meta?.exclusiveMinimum !== undefined ? { exclusiveMinimum: q.meta.exclusiveMinimum } : {}),
+        ...(q.meta?.exclusiveMaximum !== undefined ? { exclusiveMaximum: q.meta.exclusiveMaximum } : {}),
+      };
     case "boolean":
       return { type: "boolean", title: q.label };
     case "date":
@@ -95,14 +109,33 @@ export function compileFormSpec(spec: FormSpec): Compiled {
 
   // 3) ui:order — map the provided order (ids) to keys, else default order
   const providedOrderIds = spec.ui?.order ?? [];
-  uiSchema["ui:order"] = providedOrderIds.length
-    ? providedOrderIds.map((id) => toKey(id))
-    : defaultOrder;
+  if (providedOrderIds.length) {
+    const mapped = providedOrderIds.map((id) => toKey(id));
+    const set = new Set<string>(mapped);
+    for (const k of defaultOrder) if (!set.has(k)) mapped.push(k);
+    uiSchema["ui:order"] = mapped;
+  } else {
+    uiSchema["ui:order"] = defaultOrder;
+  }
 
   // 3b) Emit idToKey map so the public runtime can recover if rules slip through unmapped
+  // Build sections meta: [{ title, keys[] }]
+  const sectionsMeta: Array<{ title: string; keys: string[] }> = [];
+  spec.pages.forEach((p) =>
+    p.sections.forEach((s) => {
+      const keys: string[] = [];
+      s.questions.forEach((q) => {
+        const k = toKey(q.id);
+        if (schema.properties[k]) keys.push(k);
+      });
+      if (keys.length) sectionsMeta.push({ title: s.title, keys });
+    })
+  );
+
   uiSchema["ui:meta"] = {
     ...(uiSchema["ui:meta"] || {}),
-    idToKey: Object.fromEntries(idToKey), // { "1": "number", "2": "short_text", ... }
+    idToKey: Object.fromEntries(idToKey),
+    sections: sectionsMeta,
   };
 
   // 4) visibleWhen — copy as UI hint, but remap referenced ids -> keys
