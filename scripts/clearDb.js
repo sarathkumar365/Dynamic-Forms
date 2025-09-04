@@ -5,6 +5,7 @@ async function main() {
   await prisma.submission.deleteMany({});
   await prisma.shareLink.deleteMany({});
   await prisma.publication.deleteMany({});
+  await prisma.rule.deleteMany({});
   await prisma.question.deleteMany({});
   await prisma.section.deleteMany({});
   await prisma.page.deleteMany({});

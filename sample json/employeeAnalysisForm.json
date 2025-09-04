@@ -1,0 +1,143 @@
+{
+  "title": "Employee Financial Profile",
+  "type": "object",
+  "properties": {
+    "basic": {
+      "type": "object",
+      "title": "Basic Info",
+      "properties": {
+        "full_name": { "type": "string", "title": "Full Name" },
+        "email": { "type": "string", "format": "email", "title": "Email" },
+        "phone": { "type": "string", "title": "Phone" },
+        "company_name": { "type": "string", "title": "Company Name" },
+        "employee_id": { "type": "string", "title": "Employee ID" },
+        "department": {
+          "type": "string",
+          "title": "Department",
+          "enum": ["engineering", "sales", "marketing", "finance", "hr", "operations", "it", "support", "other"]
+        },
+        "job_title": { "type": "string", "title": "Job Title" },
+        "employment_type": {
+          "type": "string",
+          "title": "Employment Type",
+          "enum": ["full_time", "part_time", "contractor", "intern"]
+        },
+        "country": {
+          "type": "string",
+          "title": "Country",
+          "enum": ["US", "CA", "IN", "GB", "Other"]
+        },
+        "state": { "type": "string", "title": "State" },
+        "province": { "type": "string", "title": "Province" },
+        "start_date": { "type": "string", "format": "date", "title": "Start Date" }
+      },
+      "required": ["full_name", "email", "company_name", "employment_type", "country"]
+    },
+    "finances": {
+      "type": "object",
+      "title": "Finances",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "title": "Currency",
+          "enum": ["USD", "CAD", "INR", "GBP", "EUR", "Other"]
+        },
+        "base_salary": { "type": "number", "title": "Base Salary", "minimum": 0 },
+        "pay_frequency": {
+          "type": "string",
+          "title": "Pay Frequency",
+          "enum": ["annual", "monthly", "biweekly", "weekly"]
+        },
+        "bonus_eligible": { "type": "boolean", "title": "Bonus Eligible?" },
+        "bonus_target": { "type": "number", "title": "Target Bonus", "minimum": 0 },
+        "hourly_rate": { "type": "number", "title": "Hourly Rate", "minimum": 0 },
+        "hours_per_week": { "type": "number", "title": "Hours per Week", "minimum": 0, "maximum": 80 },
+        "monthly_rent": { "type": "number", "title": "Monthly Rent", "minimum": 0 },
+        "monthly_transport": { "type": "number", "title": "Monthly Transport", "minimum": 0 },
+        "monthly_food": { "type": "number", "title": "Monthly Food", "minimum": 0 },
+        "monthly_utilities": { "type": "number", "title": "Monthly Utilities", "minimum": 0 },
+        "other_monthly_expenses": { "type": "number", "title": "Other Monthly Expenses", "minimum": 0 }
+      },
+      "required": ["currency", "base_salary", "pay_frequency"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "basic": {
+            "properties": { "country": { "const": "US" } },
+            "required": ["country"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "basic": {
+            "required": ["state"],
+            "properties": {
+              "state": { "enum": ["CA", "NY", "TX", "WA", "FL", "Other"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "basic": {
+            "properties": { "country": { "const": "CA" } },
+            "required": ["country"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "basic": {
+            "required": ["province"],
+            "properties": {
+              "province": { "enum": ["ON", "QC", "BC", "AB", "MB", "Other"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "finances": {
+            "properties": { "bonus_eligible": { "const": true } },
+            "required": ["bonus_eligible"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "finances": {
+            "required": ["bonus_target"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "basic": {
+            "properties": { "employment_type": { "const": "contractor" } },
+            "required": ["employment_type"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "finances": {
+            "required": ["hourly_rate", "hours_per_week"],
+            "properties": {
+              "pay_frequency": { "enum": ["weekly", "biweekly", "monthly"] }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
