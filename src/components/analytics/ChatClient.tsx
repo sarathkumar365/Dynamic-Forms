@@ -68,7 +68,7 @@ export default function ChatClient({ publicationId }: { publicationId: string })
       {fields.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {fields.slice(0, 12).map((f) => (
-            <button key={f.key} className="btn-base btn-ghost btn-sm" title={f.type}
+            <button key={f.key} className="btn-base btn-ghost btn-sm px-3 py-1.5" title={f.type}
               onClick={() => setInput((s) => s ? `${s} ${f.key}` : `count by ${f.key}`)}>
               {f.key}
             </button>

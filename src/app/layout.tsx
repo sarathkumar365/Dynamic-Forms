@@ -1,18 +1,10 @@
 import './globals.css'
-import Link from 'next/link'
+import AppHeader from '@/components/AppHeader'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <header className="bg-white border-b">
-          <div className="container py-4 flex items-center justify-between">
-            <Link href="/" className="text-xl font-semibold">FormSpec Studio</Link>
-            <nav className="flex items-center gap-2">
-              <Link className="btn" href="/templates/new">+ New Form</Link>
-              <Link className="btn" href="/templates/new?import=1">Import JSON</Link>
-            </nav>
-          </div>
-        </header>
+        <AppHeader />
         <main className="container py-6">{children}</main>
       </body>
     </html>

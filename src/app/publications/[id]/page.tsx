@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveOwner } from "@/lib/owner";
 import { notFound } from "next/navigation";
 import { nanoid } from "@/lib/id";
+import { revalidatePath } from "next/cache";
 
 export default async function PublicationPage({
   params,
@@ -48,6 +49,31 @@ export default async function PublicationPage({
     await prisma.shareLink.create({
       data: { publicationId: pub.id, token: nanoid(16) },
     });
+    revalidatePath(`/publications/${params.id}`);
+  }
+
+  // Set publication slug
+  async function setPublicationSlug(formData: FormData) {
+    "use server";
+    const owner = await resolveOwner();
+    const pub = await prisma.publication.findFirst({ where: { id: params.id }, include: { form: true } });
+    if (!pub || !pub.form || pub.form.ownerId !== owner.id) return;
+    const slug = (formData.get("slug") as string || "").trim();
+    if (slug) {
+      await prisma.publication.update({ where: { id: pub.id }, data: { slug } });
+    }
+  }
+
+  // Set share link slug
+  async function setShareSlug(formData: FormData) {
+    "use server";
+    const owner = await resolveOwner();
+    const pub = await prisma.publication.findFirst({ where: { id: params.id }, include: { form: true } });
+    if (!pub || !pub.form || pub.form.ownerId !== owner.id) return;
+    const linkId = formData.get("linkId") as string;
+    const slug = (formData.get("slug") as string || "").trim();
+    if (!linkId) return;
+    await prisma.shareLink.update({ where: { id: linkId }, data: { slug } });
   }
 
   // NEW: assigned link via server action
@@ -83,77 +109,22 @@ export default async function PublicationPage({
       </div>
 
       {/* LINKS */}
-      <div className="card space-y-4">
+      <div className="card space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Share Links</h3>
           <form action={createShareLink}>
-            <button className="btn">+ New Generic Link</button>
+            <button className="btn">Generate Link</button>
           </form>
         </div>
 
-        {/* NEW: Assigned Link Creator */}
-        <div className="border rounded-lg p-3">
-          <h4 className="font-medium mb-2">Create Assigned Link</h4>
-          <form
-            action={createAssignedLink}
-            className="grid md:grid-cols-4 gap-2"
-          >
-            <input
-              className="input"
-              name="assignedName"
-              placeholder="Recipient name (optional)"
-            />
-            <input
-              className="input"
-              name="assignedEmail"
-              placeholder="Recipient email (optional)"
-            />
-            <input
-              className="input md:col-span-2"
-              name="note"
-              placeholder="Internal note (optional)"
-            />
-            <div className="md:col-span-4">
-              <button className="btn">+ Create Assigned Link</button>
-            </div>
-          </form>
-        </div>
-
-        {/* List all links with labels */}
+        {/* Minimal list of links to share */}
         <ul className="space-y-2">
-          {pub.shareLinks.map((sl) => {
-            const label =
-              sl.assignedName || sl.assignedEmail ? (
-                <>
-                  <span className="font-medium">
-                    {sl.assignedName || "Unnamed"}
-                  </span>
-                  {sl.assignedEmail ? (
-                    <span className="text-xs text-gray-600 ml-2">
-                      &lt;{sl.assignedEmail}&gt;
-                    </span>
-                  ) : null}
-                  {sl.note ? (
-                    <span className="text-xs text-gray-500 ml-2">
-                      — {sl.note}
-                    </span>
-                  ) : null}
-                </>
-              ) : (
-                <span className="text-xs text-gray-600">Generic</span>
-              );
-            return (
-              <li key={sl.id} className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <code className="text-xs break-all">/f/{sl.token}</code>
-                  <div className="text-sm">{label}</div>
-                </div>
-                <Link className="link" href={`/f/${sl.token}`} target="_blank">
-                  Open
-                </Link>
-              </li>
-            );
-          })}
+          {pub.shareLinks.map((sl) => (
+            <li key={sl.id} className="flex items-center justify-between">
+              <code className="text-xs break-all">/f/{sl.token}</code>
+              <Link className="link" href={`/f/${sl.token}`} target="_blank">Open</Link>
+            </li>
+          ))}
         </ul>
       </div>
 

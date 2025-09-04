@@ -3,6 +3,7 @@ model Publication {
   form       Form        @relation(fields: [formId], references: [id])
   formId     String
   title      String
+  slug       String?     @unique
   schema     Json
   uiSchema   Json?
   createdAt  DateTime    @default(now())
@@ -22,6 +23,9 @@ model ShareLink {
   assignedEmail  String?
   note           String?
   viewCount      Int          @default(0)
+  slug           String?
+
+  @@unique([publicationId, slug])
 }
 
 generator client {
