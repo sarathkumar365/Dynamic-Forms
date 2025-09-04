@@ -104,6 +104,17 @@ model Submission {
   shareLinkId String?
 }
 
+model AnalyticsQuery {
+  id            String       @id @default(cuid())
+  publication   Publication  @relation(fields: [publicationId], references: [id])
+  publicationId String
+  name          String
+  definition    Json
+  lastResult    Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
 // model Template {
 //   id          String   @id @default(cuid())
 //   ownerId     String

@@ -148,10 +148,12 @@ export default async function PublicationPage({
       </div>
 
       {/* SUBMISSIONS */}
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold">Responses</h3>
+        <Link href={`/publications/${pub.id}/analytics`} className="btn">Analyze Responses</Link>
+      </div>
       <div className="card">
-        <h3 className="font-semibold mb-2">
-          Submissions ({submissions.length})
-        </h3>
+        <h3 className="font-semibold mb-2">Submissions ({submissions.length})</h3>
         <table className="table">
           <thead>
             <tr>

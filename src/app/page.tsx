@@ -21,7 +21,7 @@ export default async function Page() {
       {/* Action bar */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Forms</h1>
-        <Link href="/templates/new" className="btn">+ New Form</Link>
+        {/* <Link href="/templates/new" className="btn">+ New Form</Link> */}
       </div>
 
       {/* Forms grid */}
