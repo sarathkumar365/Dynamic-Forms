@@ -55,27 +55,19 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-type FilterOp = "eq" | "ne" | "in" | "nin" | "gt" | "gte" | "lt" | "lte";
-type LocalDSL = {
-  metric: "count" | "sum" | "avg" | "min" | "max";
-  metricField?: string;
-  groupBy?: string;
-  filters: Array<{ field: string; op: FilterOp; value: string }>;
-};
-
-function parseText(text: string): LocalDSL {
+function parseText(text: string): DSL {
   const raw = text.trim();
   const t = raw.toLowerCase();
   // default
-  let metric: LocalDSL["metric"] = "count";
+  let metric: DSL["metric"] = "count";
   let metricField: string | undefined;
   let groupBy: string | undefined;
-  const filters: LocalDSL["filters"] = [];
+  const filters: DSL["filters"] = [] as any;
 
   // metric detection
   for (const key of ["count", "sum", "avg", "average", "min", "max"]) {
     if (t.includes(key)) {
-      if (key === "average") metric = "avg"; else metric = key as LocalDSL["metric"];
+      if (key === "average") metric = "avg"; else metric = key as DSL["metric"];
       break;
     }
   }
