@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { importJson, detectFormat } from "@/lib/formspec/importers";
 import { compileFormSpec } from "@/lib/formspec/compile";
 import PreviewPane from "@/components/builder/PreviewPane";
@@ -9,7 +9,9 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [spec, setSpec] = useState<any | null>(null);
-  const [tab, setTab] = useState<"paste" | "validate" | "preview">("paste");
+  const [tab, setTab] = useState<"paste" | "validate" | "preview" | "teach">("paste");
+  const [guide, setGuide] = useState<string | null>(null);
+  const [guideStatus, setGuideStatus] = useState<"idle" | "loading" | "error">("idle");
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -35,6 +37,24 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
   }
 
   const compiled = useMemo(() => (spec ? compileFormSpec(spec) : null), [spec]);
+
+  // Lazy-load Teach Me guide when tab is opened
+  useEffect(() => {
+    async function loadGuide() {
+      if (tab !== "teach" || guideStatus === "loading" || guide) return;
+      try {
+        setGuideStatus("loading");
+        const res = await fetch("/api/docs/json-import-guide");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        setGuide(text);
+        setGuideStatus("idle");
+      } catch (e) {
+        setGuideStatus("error");
+      }
+    }
+    loadGuide();
+  }, [tab, guide, guideStatus]);
 
   async function createForm() {
     if (!spec) return;
@@ -66,6 +86,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
             <button className={`px-2 py-1 rounded ${tab==='paste'?'bg-black text-white':'border'}`} onClick={()=>setTab('paste')}>Paste</button>
             <button className={`px-2 py-1 rounded ${tab==='validate'?'bg-black text-white':'border'}`} onClick={()=>setTab('validate')}>Validate</button>
             <button className={`px-2 py-1 rounded ${tab==='preview'?'bg-black text-white':'border'}`} onClick={()=>setTab('preview')} disabled={!spec}>Preview</button>
+            <button className={`px-2 py-1 rounded ${tab==='teach'?'bg-black text-white':'border'}`} onClick={()=>setTab('teach')}>Teach Me</button>
           </div>
         </div>
         <div className="flex-1 overflow-auto p-4">
@@ -112,6 +133,20 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                     <button className="btn-base btn-primary btn-md" onClick={createForm} disabled={!spec}>Create Form</button>
                   </div>
                 </>
+              )}
+            </div>
+          )}
+          {tab === 'teach' && (
+            <div className="space-y-3">
+              <div className="text-sm text-gray-700">How to structure your JSON for import.</div>
+              {guideStatus === 'loading' && (
+                <div className="text-sm text-gray-500">Loading guide…</div>
+              )}
+              {guideStatus === 'error' && (
+                <div className="text-sm text-red-600">Failed to load guide. Please try again.</div>
+              )}
+              {guide && (
+                <pre className="text-sm whitespace-pre-wrap leading-5 border rounded p-3 bg-gray-50">{guide}</pre>
               )}
             </div>
           )}

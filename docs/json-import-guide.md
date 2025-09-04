@@ -66,7 +66,15 @@ Nested objects become sections. The object’s `title` is the section header.
         "full_name": { "type": "string", "title": "Full Name" },
         "email": { "type": "string", "format": "email", "title": "Email" }
       },
-      "required": ["full_name", "email"]
+      "required": ["full_name", "email"],
+      "address": {
+      "type": "object",
+      "title": "Address",
+      "properties": {
+        "country": { "type": "string", "title": "Country", "enum": ["US", "CA", "Other"] },
+        "city": { "type": "string", "title": "City" }
+      }
+    }
     },
     "address": {
       "type": "object",

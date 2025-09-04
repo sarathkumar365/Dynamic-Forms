@@ -1,17 +1,25 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
+import ResultsView from "./ResultsView";
 
 type FilterOp = "eq" | "ne" | "in" | "nin" | "gt" | "gte" | "lt" | "lte";
 
 export default function QueryClient({ publicationId, suggestedKeys }: { publicationId: string; suggestedKeys: string[] }) {
-  const [metric, setMetric] = useState<"count" | "sum" | "avg" | "min" | "max">("count");
+  const [metric, setMetric] = useState<"count" | "sum" | "avg" | "min" | "max" | "">("");
   const [metricField, setMetricField] = useState<string>("");
-  const [groupBy, setGroupBy] = useState<string>(suggestedKeys?.[0] || "");
+  const [groupBy, setGroupBy] = useState<string>("");
   const [filters, setFilters] = useState<Array<{ field: string; op: FilterOp; value: string }>>([]);
   const [result, setResult] = useState<any | null>(null);
+  const [display, setDisplay] = useState<'table'|'barV'|'barH'|'pie'|'line'>('table');
   const [err, setErr] = useState<string | null>(null);
   const [savingName, setSavingName] = useState<string>("");
   const [saved, setSaved] = useState<Array<{ id: string; name: string; definition: any }>>([]);
+  const [fields, setFields] = useState<Array<{ key: string; type: 'number'|'text'|'boolean'|'unknown'; samples?: string[] }>>([]);
+  const [topVals, setTopVals] = useState<Record<string, Array<{ value: string; count: number }>>>({});
+  const [loadingTop, setLoadingTop] = useState<Record<string, boolean>>({});
+  const [showSidebar, setShowSidebar] = useState<boolean>(false);
+  const [activeFilterIdx, setActiveFilterIdx] = useState<number | null>(null);
+  const usageKey = `analyticsFieldUsage:${publicationId}`;
 
   async function run() {
     setErr(null); setResult(null);
@@ -21,27 +29,34 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ metric, metricField: metric !== "count" ? metricField : undefined, filters, groupBy: groupBy || undefined }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-      setResult(data);
+      const data = await readJsonSafe(res);
+      if (!res.ok) throw new Error((data as any)?.error || `HTTP ${res.status}`);
+      setResult(data as any);
+      // record usage for simple ranking
+      try {
+        const used: string[] = [];
+        if (groupBy) used.push(groupBy);
+        if (metric !== 'count' && metricField) used.push(metricField);
+        for (const f of filters) if (f.field) used.push(f.field);
+        if (used.length) recordUsage(used);
+      } catch {}
     } catch (e: any) {
       setErr(e?.message || "Failed to run query");
     }
   }
 
   useEffect(() => {
-    // starter query: count by suggested key if available
-    run();
-    // load saved queries
+    // minimal start — do not auto-run
     loadSaved();
+    loadFields();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadSaved() {
     try {
       const res = await fetch(`/api/publications/${publicationId}/analytics/queries`);
-      const data = await res.json();
-      if (res.ok) setSaved((data?.rows || []).map((r: any) => ({ id: r.id, name: r.name, definition: r.definition })));
+      const data = await readJsonSafe(res);
+      if (res.ok) setSaved(((data as any)?.rows || []).map((r: any) => ({ id: r.id, name: r.name, definition: r.definition })));
     } catch {}
   }
 
@@ -54,8 +69,8 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: savingName.trim(), definition }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+      const data = await readJsonSafe(res);
+      if (!res.ok) throw new Error((data as any)?.error || `HTTP ${res.status}`);
       setSavingName("");
       await loadSaved();
     } catch (e: any) {
@@ -71,6 +86,14 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
     setFilters(Array.isArray(def.filters) ? def.filters : []);
     // run after state settles
     setTimeout(() => { run(); }, 0);
+  }
+  async function readJsonSafe(res: Response) {
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      // try text for diagnostics
+      try { const t = await res.text(); return { error: t || null }; } catch { return {}; }
+    }
+    try { return await res.json(); } catch { return {}; }
   }
 
   function exportCSV() {
@@ -95,6 +118,65 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
     return s;
   }
 
+  async function loadFields() {
+    try {
+      const res = await fetch(`/api/publications/${publicationId}/analytics/fields`);
+      const data = await res.json();
+      if (res.ok) setFields(data?.fields || []);
+    } catch {}
+  }
+
+  function fieldInfo(name: string | undefined) {
+    if (!name) return undefined as any;
+    return fields.find((f)=>f.key===name);
+  }
+  function allowedOpsFor(type: string | undefined): FilterOp[] {
+    if (type === 'number') return ["eq","ne","in","nin","gt","gte","lt","lte"];
+    if (type === 'boolean') return ["eq","ne","in","nin"];
+    return ["eq","ne","in","nin"];
+  }
+  async function loadTop(field: string) {
+    if (!field) return;
+    setLoadingTop((m)=>({ ...m, [field]: true }));
+    try {
+      const res = await fetch(`/api/publications/${publicationId}/analytics/fields/values?field=${encodeURIComponent(field)}&limit=10`);
+      const data = await res.json();
+      if (res.ok) setTopVals((m)=>({ ...m, [field]: data?.values || [] }));
+    } finally {
+      setLoadingTop((m)=>({ ...m, [field]: false }));
+    }
+  }
+
+  // auto-load top values when focusing a filter field
+  useEffect(() => {
+    if (activeFilterIdx == null) return;
+    const f = filters[activeFilterIdx];
+    if (!f || !f.field) return;
+    if (!topVals[f.field]) loadTop(f.field);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFilterIdx, filters]);
+
+  function getUsage(): Record<string, number> {
+    try { return JSON.parse(localStorage.getItem(usageKey) || '{}') || {}; } catch { return {}; }
+  }
+  function recordUsage(keys: string[]) {
+    const cur = getUsage();
+    for (const k of keys) cur[k] = (cur[k] || 0) + 1;
+    try { localStorage.setItem(usageKey, JSON.stringify(cur)); } catch {}
+  }
+  function suggestedFieldKeys(max = 5): string[] {
+    const regs = fields.map(f=>f.key);
+    const usage = getUsage();
+    const scored = regs.map(k => ({ k, s: usage[k] || 0 }));
+    scored.sort((a,b)=> b.s - a.s || a.k.localeCompare(b.k));
+    return scored.slice(0, max).map(x=>x.k);
+  }
+  function ensureOpFor(i: number, fieldKey: string) {
+    const fi = fieldInfo(fieldKey);
+    const ops = allowedOpsFor(fi?.type);
+    setFilters((fs)=> fs.map((f, idx)=> idx!==i? f : (ops.includes(f.op) ? f : { ...f, op: ops[0] })));
+  }
+
   function addFilter() {
     setFilters((f) => [...f, { field: "", op: "eq", value: "" }]);
   }
@@ -104,11 +186,13 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
   function delF(i: number) { setFilters((fs) => fs.filter((_, idx) => idx !== i)); }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-screen-2xl mx-auto">
+      <div className="rounded-lg border p-4 space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs mb-1">Metric</label>
           <select className="input" value={metric} onChange={(e)=>setMetric(e.target.value as any)}>
+            <option value="">select metric…</option>
             <option value="count">count</option>
             <option value="sum">sum</option>
             <option value="avg">avg</option>
@@ -116,62 +200,172 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
             <option value="max">max</option>
           </select>
         </div>
-        {metric !== "count" && (
+        {metric && metric !== "count" && (
           <div>
-            <label className="block text-xs mb-1">Field (numeric)</label>
-            <input className="input" value={metricField} onChange={(e)=>setMetricField(e.target.value)} placeholder="salary, age" />
+            <label className="block text-xs mb-1">Field (numeric/boolean)</label>
+            <div className="flex gap-2">
+              <input className="input" value={metricField} onChange={(e)=>setMetricField(e.target.value)} placeholder="e.g., base_salary" />
+              {fields.filter(f=> f.type==='number').slice(0,3).map((f)=>(
+                <button key={f.key} className="btn-base btn-ghost btn-md" onClick={()=>setMetricField(f.key)}>{f.key}</button>
+              ))}
+            </div>
           </div>
         )}
-        <div className="flex-1" />
+          <div className="flex-1" />
+          <button className="btn-base btn-primary btn-md" onClick={run} disabled={!metric || (metric !== 'count' && !metricField.trim())}>Run</button>
+        </div>
+
+        {/* Group by row */}
         <div>
           <label className="block text-xs mb-1">Group by (categorical)</label>
-          <div className="flex gap-2">
-            <input className="input" value={groupBy} onChange={(e)=>setGroupBy(e.target.value)} placeholder={suggestedKeys?.[0] || "country"} />
-            {suggestedKeys?.slice(0,3).map((k)=>(
-              <button key={k} className="btn-base btn-ghost btn-md" onClick={()=>setGroupBy(k)}>{k}</button>
+          <div className="flex flex-wrap gap-2">
+            <input className="input" value={groupBy} onChange={(e)=>setGroupBy(e.target.value)} placeholder={fields.find(f=>f.type==='text')?.key || "country"} />
+            {fields.filter(f=> f.type==='text' || f.type==='boolean').slice(0,6).map((f)=>(
+              <button key={f.key} className="btn-base btn-ghost btn-md" onClick={()=>setGroupBy(f.key)}>{f.key}</button>
             ))}
           </div>
         </div>
-        <button className="btn-base btn-primary btn-md" onClick={run}>Run</button>
-      </div>
 
-      <div>
-        <div className="text-sm font-medium mb-2">Filters</div>
-        {filters.map((f, i) => (
-          <div key={i} className="flex gap-2 mb-2">
-            <input className="input" placeholder="field" value={f.field} onChange={(e)=>setF(i,{field:e.target.value})} />
-            <select className="input" value={f.op} onChange={(e)=>setF(i,{op:e.target.value as any})}>
-              <option value="eq">=</option>
-              <option value="ne">≠</option>
-              <option value="in">in</option>
-              <option value="nin">not in</option>
-              <option value="gt">&gt;</option>
-              <option value="gte">≥</option>
-              <option value="lt">&lt;</option>
-              <option value="lte">≤</option>
-            </select>
-            <input className="input" placeholder={f.op === 'in' || f.op === 'nin' ? 'comma,separated' : 'value'} value={f.value} onChange={(e)=>setF(i,{value:e.target.value})} />
-            <button className="btn-base btn-ghost btn-md" onClick={()=>delF(i)}>Remove</button>
-          </div>
-        ))}
-        <button className="btn-base btn-ghost btn-md" onClick={addFilter}>+ Add filter</button>
-      </div>
-
-      {/* Save + Export */}
-      <div className="flex items-end gap-2">
-        <div>
-          <label className="block text-xs mb-1">Save as</label>
-          <div className="flex gap-2">
-            <input className="input" placeholder="Query name" value={savingName} onChange={(e)=>setSavingName(e.target.value)} />
-            <button className="btn-base btn-md" onClick={save}>Save</button>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+        <div className="md:col-span-2">
+          <div className="text-sm font-medium mb-2">Filters</div>
+          {filters.map((f, i) => {
+          const fi = fieldInfo(f.field);
+          const ops = allowedOpsFor(fi?.type);
+          const valueIsList = f.op === 'in' || f.op === 'nin';
+          return (
+            <div key={i} className="mb-3">
+              <div className="flex gap-2 mb-1">
+                <input className="input" value={f.field} placeholder="field key" onFocus={()=>{ setActiveFilterIdx(i); setShowSidebar(true); }} onChange={(e)=>{ setF(i,{field:e.target.value}); ensureOpFor(i, e.target.value);} } />
+                <select className="input" value={f.op} onChange={(e)=>setF(i,{op:e.target.value as any})}>
+                  {ops.map((o)=> (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+                {fi?.type === 'boolean' ? (
+                  <select className="input" value={f.value} onChange={(e)=>setF(i,{value:e.target.value})}>
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                    <option value="1">1</option>
+                    <option value="0">0</option>
+                  </select>
+                ) : fi?.type === 'number' && !valueIsList ? (
+                  <input type="number" className="input" placeholder="number" value={f.value} onChange={(e)=>setF(i,{value:e.target.value})} />
+                ) : (
+                  <input className="input" placeholder={valueIsList? 'a, b, c' : 'value'} value={f.value} onChange={(e)=>setF(i,{value:e.target.value})} />
+                )}
+                <button className="btn-base btn-ghost btn-md" onClick={()=>delF(i)}>Remove</button>
+              </div>
+              {fi?.samples && fi.samples.length ? (
+                <div className="flex flex-wrap gap-1 ml-1">
+                  {fi.samples.slice(0,8).map((s)=>(
+                    <button key={s} className="btn-base btn-ghost btn-xs" onClick={()=>{
+                      if (valueIsList) {
+                        const cur = f.value ? f.value.split(',').map(x=>x.trim()).filter(Boolean) : [];
+                        if (!cur.includes(s)) setF(i,{ value: [...cur, s].join(',') });
+                      } else {
+                        setF(i,{ value: s });
+                      }
+                    }}>{s}</button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )
+          })}
+          <div className="flex items-center gap-2">
+            <button className="btn-base btn-ghost btn-md" onClick={()=>{ addFilter(); setActiveFilterIdx(filters.length); setShowSidebar(true); }}>+ Add filter</button>
+            {filters.length>0 && (
+              <button className="btn-base btn-ghost btn-md" onClick={()=>{ setFilters([]); setActiveFilterIdx(null); setShowSidebar(false); }}>Clear</button>
+            )}
           </div>
         </div>
-        <div className="flex-1" />
-        <div>
-          <label className="block text-xs mb-1">Export</label>
-          <button className="btn-base btn-md" onClick={exportCSV} disabled={!result?.table?.length}>CSV</button>
+
+        <div className="hidden">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-medium">Top values</div>
+            {showSidebar ? (
+              <button className="btn-base btn-ghost btn-xs" onClick={()=>setShowSidebar(false)}>Hide</button>
+            ) : (
+              <button className="btn-base btn-ghost btn-xs" onClick={()=>setShowSidebar(true)}>Show</button>
+            )}
+          </div>
+          {!showSidebar ? (
+            <div className="text-xs text-gray-600">Click Show or focus a filter field.</div>
+          ) : activeFilterIdx == null ? (
+            <div className="text-xs text-gray-600">
+              Click a filter field to see values.
+              <div className="mt-2">Popular fields:</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {suggestedFieldKeys(5).map(k => (
+                  <button key={k} className="btn-base btn-ghost btn-xs" onClick={()=>{
+                    const idx = filters.length ? (activeFilterIdx ?? 0) : 0;
+                    if (filters.length === 0) { addFilter(); setActiveFilterIdx(0); }
+                    setF(activeFilterIdx ?? 0, { field: k });
+                    loadTop(k); setShowSidebar(true);
+                  }}>{k}</button>
+                ))}
+              </div>
+            </div>
+          ) : !filters[activeFilterIdx]?.field ? (
+            <div className="text-xs text-gray-600">Enter a field key first.</div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-xs text-gray-700">for <span className="font-mono">{filters[activeFilterIdx].field}</span></div>
+              <div className="flex flex-wrap gap-1">
+                {topVals[filters[activeFilterIdx].field]?.length ? (
+                  topVals[filters[activeFilterIdx].field].map((t)=> (
+                    <button key={filters[activeFilterIdx].field+':'+t.value} className="btn-base btn-ghost btn-xs" title={`${t.count} matches`} onClick={()=>{
+                      const idx = activeFilterIdx;
+                      if (idx == null) return;
+                      const cur = filters[idx];
+                      if (!cur) return;
+                      const valueIsList = cur.op === 'in' || cur.op === 'nin';
+                      if (valueIsList) {
+                        const list = cur.value ? cur.value.split(',').map(x=>x.trim()).filter(Boolean) : [];
+                        if (!list.includes(t.value)) setF(idx,{ value: [...list, t.value].join(',') });
+                      } else {
+                        setF(idx,{ value: t.value });
+                      }
+                    }}>{t.value}</button>
+                  ))
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-xs text-gray-600">No values found for this field. Try one of these:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {suggestedFieldKeys(5).map(k => (
+                        <button key={k} className="btn-base btn-ghost btn-xs" onClick={()=>{
+                          setF(activeFilterIdx, { field: k, value: '' });
+                          loadTop(k);
+                        }}>{k}</button>
+                      ))}
+                    </div>
+                    <button className="btn-base btn-ghost btn-xs" onClick={()=>loadTop(filters[activeFilterIdx].field)} disabled={loadingTop[filters[activeFilterIdx].field]}>Retry</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+        {/* Save row */}
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <label className="block text-xs mb-1">Save as</label>
+            <div className="flex gap-2">
+              <input className="input" placeholder="Query name" value={savingName} onChange={(e)=>setSavingName(e.target.value)} />
+              <button className="btn-base btn-md" onClick={save}>Save</button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs mb-1">Export</label>
+            <button className="btn-base btn-md" onClick={exportCSV} disabled={!result?.table?.length}>CSV</button>
+          </div>
+        </div>
+
       </div>
+      </div>
+
+      
 
       {/* Saved queries */}
       {saved.length > 0 && (
@@ -187,26 +381,82 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
 
       {err && <div className="text-sm text-red-600">{err}</div>}
 
-      {result && (
-        <div className="space-y-3">
-          {result.series && result.series.labels?.length ? (
-            <Bar labels={result.series.labels} data={result.series.data} />
-          ) : result.value !== undefined ? (
-            <div className="rounded-lg border p-3 text-sm">Value: <span className="font-mono">{String(result.value)}</span></div>
-          ) : null}
+      {/* Results header with single display switch */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">Results</div>
+        <div className="flex gap-2">
+          {(['table','barV','barH','pie','line'] as const).map(opt => (
+            <button
+              key={opt}
+              className={`btn-base btn-xs ${display===opt? 'btn-primary' : 'btn-ghost'}`}
+              onClick={()=>setDisplay(opt)}
+            >{opt}</button>
+          ))}
+        </div>
+      </div>
+      <ResultsView result={result} viewMode={display==='table' ? 'table' : 'chart'} chartType={display==='table' ? 'barV' : display as any} />
 
-          {result.table && result.table.length ? (
-            <div className="overflow-auto rounded-lg border">
-              <table className="table">
-                <thead><tr>{Object.keys(result.table[0]).map((h)=>(<th key={h}>{h}</th>))}</tr></thead>
-                <tbody>
-                  {result.table.map((row: any, idx: number)=>(
-                    <tr key={idx}>{Object.values(row).map((v:any,i:number)=>(<td key={i} className="text-sm">{String(v)}</td>))}</tr>
-                  ))}
-                </tbody>
-              </table>
+      {showSidebar && (
+        <div className="fixed right-6 top-32 w-80 z-40">
+          <div className="border rounded-lg bg-white p-3 shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium">Top values</div>
+              <button className="btn-base btn-ghost btn-xs" onClick={()=>setShowSidebar(false)}>Hide</button>
             </div>
-          ) : null}
+            {activeFilterIdx == null ? (
+              <div className="text-xs text-gray-600">
+                Click a filter field to see values.
+                <div className="mt-2">Popular fields:</div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {suggestedFieldKeys(5).map(k => (
+                    <button key={k} className="btn-base btn-ghost btn-xs" onClick={()=>{
+                      const idx = filters.length ? (activeFilterIdx ?? 0) : 0;
+                      if (filters.length === 0) { addFilter(); setActiveFilterIdx(0); }
+                      setF(activeFilterIdx ?? 0, { field: k });
+                      loadTop(k);
+                    }}>{k}</button>
+                  ))}
+                </div>
+              </div>
+            ) : !filters[activeFilterIdx]?.field ? (
+              <div className="text-xs text-gray-600">Enter a field key first.</div>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-xs text-gray-700">for <span className="font-mono">{filters[activeFilterIdx].field}</span></div>
+                {/* Values area */}
+                <div className="flex flex-wrap gap-1">
+                  {topVals[filters[activeFilterIdx].field]?.length ? (
+                    topVals[filters[activeFilterIdx].field].map((t)=> (
+                      <button key={filters[activeFilterIdx].field+':'+t.value} className="btn-base btn-ghost btn-xs" title={`${t.count} matches`} onClick={()=>{
+                        const idx = activeFilterIdx;
+                        if (idx == null) return;
+                        const cur = filters[idx];
+                        if (!cur) return;
+                        const valueIsList = cur.op === 'in' || cur.op === 'nin';
+                        if (valueIsList) {
+                          const list = cur.value ? cur.value.split(',').map(x=>x.trim()).filter(Boolean) : [];
+                          if (!list.includes(t.value)) setF(idx,{ value: [...list, t.value].join(',') });
+                        } else {
+                          setF(idx,{ value: t.value });
+                        }
+                      }}>{t.value}</button>
+                    ))
+                  ) : topVals[filters[activeFilterIdx].field] && !loadingTop[filters[activeFilterIdx].field] ? (
+                    <div className="text-xs text-gray-600">
+                      No values found for this field. Try one of these keys:
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {suggestedFieldKeys(5).map(k => (
+                          <button key={k} className="btn-base btn-ghost btn-xs" onClick={()=>{ setF(activeFilterIdx, { field: k, value: '' }); loadTop(k); }}>{k}</button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <button className="btn-base btn-ghost btn-xs" onClick={()=>loadTop(filters[activeFilterIdx].field)} disabled={loadingTop[filters[activeFilterIdx].field]}>{loadingTop[filters[activeFilterIdx].field] ? 'Loading…' : 'Load top 10'}</button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

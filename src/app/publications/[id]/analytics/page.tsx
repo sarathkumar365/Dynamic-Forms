@@ -2,8 +2,9 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { resolveOwner } from "@/lib/owner";
 import QueryClient from "@/components/analytics/QueryClient";
+import ChatClient from "@/components/analytics/ChatClient";
 
-export default async function PublicationAnalytics({ params }: { params: { id: string } }) {
+export default async function PublicationAnalytics({ params, searchParams }: { params: { id: string }, searchParams?: { [key: string]: string | string[] | undefined } }) {
   const owner = await resolveOwner();
   const pub = await prisma.publication.findFirst({
     where: { id: params.id },
@@ -26,15 +27,24 @@ export default async function PublicationAnalytics({ params }: { params: { id: s
     }
   } catch {}
 
+  const tab = typeof searchParams?.tab === 'string' ? searchParams!.tab : 'builder';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Analytics — {pub.title}</h1>
-        <Link className="link" href={`/publications/${pub.id}`}>Back to publication</Link>
+        <div className="flex items-center gap-3">
+          <Link className={`link ${tab === 'builder' ? 'font-bold' : ''}`} href={`/publications/${pub.id}/analytics?tab=builder`}>Builder</Link>
+          <Link className={`link ${tab === 'chat' ? 'font-bold' : ''}`} href={`/publications/${pub.id}/analytics?tab=chat`}>Chat</Link>
+          <Link className="link" href={`/publications/${pub.id}`}>Back to publication</Link>
+        </div>
       </div>
       <div className="card">
-        {/* Client-side query builder */}
-        <QueryClient publicationId={pub.id} suggestedKeys={suggested} />
+        {tab === 'chat' ? (
+          <ChatClient publicationId={pub.id} />
+        ) : (
+          <QueryClient publicationId={pub.id} suggestedKeys={suggested} />
+        )}
       </div>
     </div>
   );
