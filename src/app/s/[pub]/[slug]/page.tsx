@@ -7,10 +7,7 @@ export default async function FormBySlug({ params }: { params: { pub: string; sl
   if (!pub) return notFound();
   const share = await prisma.shareLink.findFirst({ where: { publicationId: pub.id, slug: params.slug }, include: { publication: true } });
   if (!share || share.isDisabled) return notFound();
-  // Track an open (best-effort). Ignore if column not present.
-  try {
-    await prisma.shareLink.update({ where: { id: share.id }, data: { viewCount: { increment: 1 } } });
-  } catch {}
+  try { await prisma.shareLink.update({ where: { id: share.id }, data: { viewCount: { increment: 1 } } }); } catch {}
 
   const schema = share.publication.schema as any;
   const uiSchema = (share.publication.uiSchema as any) ?? {};
