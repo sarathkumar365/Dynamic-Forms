@@ -9,12 +9,14 @@ export default function BuilderTopBar({
   previewOpen,
   onTogglePreview,
   onOpenSpecViewer,
+  onOpenImport,
 }: {
   getFormSpec: () => any;
   onOpenRules: () => void;
   previewOpen: boolean;
   onTogglePreview: () => void;
   onOpenSpecViewer: () => void;
+  onOpenImport: () => void;
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -76,6 +78,7 @@ export default function BuilderTopBar({
       {/* Kebab menu for secondary actions */}
       <Kebab
         items={[
+          { label: 'Import JSON', onClick: onOpenImport },
           { label: 'Rules', onClick: onOpenRules },
           { label: 'View JSON', onClick: onOpenSpecViewer },
           { label: 'Validate', onClick: () => {

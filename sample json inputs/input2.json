@@ -1,0 +1,273 @@
+{
+  "title": "Onboarding Request",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "title": "Full Name"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email"
+    },
+    "role": {
+      "type": "string",
+      "title": "Role",
+      "enum": [
+        "employee",
+        "contractor"
+      ]
+    },
+    "department": {
+      "type": "string",
+      "title": "Department",
+      "enum": [
+        "it",
+        "hr",
+        "ops"
+      ]
+    },
+    "country": {
+      "type": "string",
+      "title": "Country",
+      "enum": [
+        "US",
+        "CA",
+        "Other"
+      ]
+    },
+    "state": {
+      "type": "string",
+      "title": "State"
+    },
+    "province": {
+      "type": "string",
+      "title": "Province"
+    },
+    "office": {
+      "type": "string",
+      "title": "Office",
+      "enum": [
+        "hq",
+        "branch",
+        "remote"
+      ]
+    },
+    "building": {
+      "type": "string",
+      "title": "Building"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee ID"
+    },
+    "contractor_company": {
+      "type": "string",
+      "title": "Contractor Company"
+    },
+    "equipment": {
+      "type": "array",
+      "title": "Equipment",
+      "items": {
+        "type": "string",
+        "enum": [
+          "laptop",
+          "vpn_token",
+          "phone",
+          "access_card"
+        ]
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "full_name",
+    "email",
+    "role",
+    "department",
+    "country"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "country": {
+            "const": "US"
+          }
+        },
+        "required": [
+          "country"
+        ]
+      },
+      "then": {
+        "required": [
+          "state"
+        ],
+        "properties": {
+          "state": {
+            "enum": [
+              "CA",
+              "NY",
+              "TX"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "country": {
+            "const": "CA"
+          }
+        },
+        "required": [
+          "country"
+        ]
+      },
+      "then": {
+        "required": [
+          "province"
+        ],
+        "properties": {
+          "province": {
+            "enum": [
+              "ON",
+              "QC",
+              "BC"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "employee"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "employee_id"
+        ],
+        "properties": {
+          "office": {
+            "enum": [
+              "hq",
+              "branch"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "const": "contractor"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "then": {
+        "required": [
+          "contractor_company"
+        ],
+        "properties": {
+          "office": {
+            "const": "remote"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "office": {
+            "const": "hq"
+          }
+        },
+        "required": [
+          "office"
+        ]
+      },
+      "then": {
+        "properties": {
+          "building": {
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "office": {
+            "const": "branch"
+          }
+        },
+        "required": [
+          "office"
+        ]
+      },
+      "then": {
+        "properties": {
+          "building": {
+            "enum": [
+              "North",
+              "South"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "office": {
+            "const": "remote"
+          }
+        },
+        "required": [
+          "office"
+        ]
+      },
+      "then": {
+        "properties": {
+          "building": {
+            "const": "N/A"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "department": {
+            "const": "it"
+          }
+        },
+        "required": [
+          "department"
+        ]
+      },
+      "then": {
+        "required": [
+          "equipment"
+        ]
+      }
+    }
+  ]
+}
