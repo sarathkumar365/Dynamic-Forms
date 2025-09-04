@@ -25,7 +25,7 @@ export default function QuestionPalette({
   };
   return (
     <div className="space-y-2">
-      <h3 className="font-semibold">Add</h3>
+      {/* <h3 className="font-semibold">Add</h3> */}
       {/* Removed helper text for cleaner UI when no section is selected */}
       {firstSectionId && (
         <div className="text-xs text-gray-500">Adding to: {labelForSection(spec, firstSectionId)}</div>
