@@ -7,8 +7,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="bg-white border-b">
           <div className="container py-4 flex items-center justify-between">
             <Link href="/" className="text-xl font-semibold">FormSpec Studio</Link>
-            <nav className="flex items-center gap-4">
+            <nav className="flex items-center gap-2">
               <Link className="btn" href="/templates/new">+ New Form</Link>
+              <Link className="btn" href="/templates/new?import=1">Import JSON</Link>
             </nav>
           </div>
         </header>

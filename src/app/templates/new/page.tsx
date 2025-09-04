@@ -2,8 +2,11 @@
 
 import BuilderShell from "@/components/builder/BuilderShell";
 import { newEmptySpec } from "@/lib/formspec/defaults";
+import { useSearchParams } from "next/navigation";
 
 export default function NewFormPage() {
+  const sp = useSearchParams();
+  const showImport = sp.get("import") === "1" || sp.get("import") === "true";
   // You may want to use a normalized empty form object here
   const initial = {
     title: "New Form",
@@ -12,9 +15,8 @@ export default function NewFormPage() {
     rules: [],
   };
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Create a new form</h1>
-      <BuilderShell initialSpec={initial} />
+    <div className="p-6">
+      <BuilderShell initialSpec={initial} initialShowImport={showImport} />
     </div>
   );
 }

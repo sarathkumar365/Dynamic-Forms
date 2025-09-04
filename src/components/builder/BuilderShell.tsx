@@ -12,7 +12,7 @@ import ImportModal from "./ImportModal";
 import SaveBar from "./SaveBar";
 import React, { useEffect, useState } from "react";
 
-export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
+export default function BuilderShell({ initialSpec, initialShowImport = false }: { initialSpec?: any; initialShowImport?: boolean }) {
   const {
     spec,
     setSpec,
@@ -32,7 +32,7 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [previewWidth, setPreviewWidth] = useState<number>(380);
   const [showSpecViewer, setShowSpecViewer] = useState(false);
-  const [showImport, setShowImport] = useState(false);
+  const [showImport, setShowImport] = useState(initialShowImport);
 
   // restore persisted preview state
   useEffect(() => {
@@ -81,6 +81,12 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
   };
   console.log(spec,"Spec");
 
+  // Show top action bar (Save/Preview) only after user adds at least one question
+  const hasAnyQuestions = (() => {
+    for (const p of spec.pages) for (const s of p.sections) if (s.questions.length > 0) return true;
+    return false;
+  })();
+
   return (
     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-8rem)]">
       <div className="col-span-2">
@@ -91,14 +97,16 @@ export default function BuilderShell({ initialSpec }: { initialSpec?: any }) {
         />
       </div>
       <div className="col-span-5">
-        <BuilderTopBar
-          getFormSpec={() => spec}
-          onOpenRules={() => setShowRules(true)}
-          previewOpen={previewOpen}
-          onTogglePreview={() => setPreviewOpen((v) => !v)}
-          onOpenSpecViewer={() => setShowSpecViewer(true)}
-          onOpenImport={() => setShowImport(true)}
-        />
+        {hasAnyQuestions && (
+          <BuilderTopBar
+            getFormSpec={() => spec}
+            onOpenRules={() => setShowRules(true)}
+            previewOpen={previewOpen}
+            onTogglePreview={() => setPreviewOpen((v) => !v)}
+            onOpenSpecViewer={() => setShowSpecViewer(true)}
+            onOpenImport={() => setShowImport(true)}
+          />
+        )}
         <BuilderCanvas
           spec={spec}
           addPage={addPage}

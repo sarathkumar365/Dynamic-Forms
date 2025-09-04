@@ -52,6 +52,9 @@ export default function QuestionPalette({
             )}
           </>
         )}
+        {!firstSectionId && (
+          <div className="text-xs text-gray-400">&nbsp;</div>
+        )}
       </div>
     </div>
   );

@@ -24,10 +24,7 @@ export default function Inspector({
     return null;
   }, [spec, selectedId]);
 
-  if (!q)
-    return (
-      <div className="text-sm text-muted-foreground">Select a question…</div>
-    );
+  if (!q) return null;
 
   // Prompt for key if missing
   const needsKey = !q.key || q.key.trim() === "";
