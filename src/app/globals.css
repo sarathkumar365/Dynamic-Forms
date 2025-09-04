@@ -4,8 +4,18 @@
 body { @apply bg-gray-50 text-gray-900; }
 .container { @apply max-w-5xl mx-auto px-4; }
 .card { @apply bg-white rounded-xl shadow p-5; }
-.btn { @apply inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800; }
+.btn { @apply inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 whitespace-nowrap; }
+/* Consistent, composable button primitives for precise sizing */
+.btn-base { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 text-sm font-medium whitespace-nowrap select-none; }
+.btn-primary { @apply bg-black text-white hover:bg-gray-800; }
+.btn-ghost { @apply bg-white text-gray-900 hover:bg-gray-50; }
+.btn-md { @apply h-10 px-4; }
+.btn-square { @apply w-10 h-10 p-0; }
+.btn-wide { @apply min-w-[120px]; }
+.btn-lg { @apply px-4 py-2.5 rounded-xl text-sm; }
+.btn-xs { @apply px-2 py-1 text-xs rounded-md border bg-black text-white; }
 .input { @apply w-full border rounded-lg p-2; }
+.input-lg { @apply p-3 rounded-xl; }
 .link { @apply text-blue-600 hover:underline; }
 .table { @apply w-full text-sm; }
 th, td { @apply border-b py-2 text-left; }

@@ -1,4 +1,5 @@
 "use client";
+import React, { useState } from "react";
 import { FormSpec, FSQuestion } from "@/types/formspec";
 
 export default function QuestionPalette({
@@ -11,6 +12,8 @@ export default function QuestionPalette({
   activeSectionId: string | null;
 }) {
   const firstSectionId = activeSectionId ?? spec.pages?.[0]?.sections?.[0]?.id ?? null;
+  const [query, setQuery] = useState("");
+  const [showMore, setShowMore] = useState(false);
   const add = (type: FSQuestion["type"], label: string) => {
     if (!firstSectionId) return;
     onAdd(firstSectionId, {
@@ -27,21 +30,26 @@ export default function QuestionPalette({
         <div className="text-xs text-gray-500 mb-2">Add a page and section first.</div>
       )}
       {firstSectionId && (
-        <>
-          <div className="text-xs text-gray-500">Adding to: {labelForSection(spec, firstSectionId)}</div>
-          <input className="input" placeholder="Search types… (text, email, select)" onChange={() => {}} />
-        </>
+        <div className="text-xs text-gray-500">Adding to: {labelForSection(spec, firstSectionId)}</div>
       )}
       <div className="grid gap-2">
         {firstSectionId && (
           <>
-            <button className="btn" onClick={() => add("text", "Text")}>Text</button>
-            <button className="btn" onClick={() => add("email", "Email")}>Email</button>
-            <button className="btn" onClick={() => add("number", "Number")}>Number</button>
-            <button className="btn" onClick={() => add("date", "Date")}>Date</button>
-            <button className="btn" onClick={() => add("select", "Select")}>Select</button>
-            <button className="btn" onClick={() => add("multiselect", "Multi-select")}>Multi-select</button>
-            <button className="btn" onClick={() => add("boolean", "Yes / No")}>Yes / No</button>
+            {matches("text", query) && <button className="btn" onClick={() => add("text", "Text")}>Text</button>}
+            {matches("email", query) && <button className="btn" onClick={() => add("email", "Email")}>Email</button>}
+            {matches("number", query) && <button className="btn" onClick={() => add("number", "Number")}>Number</button>}
+            {matches("select", query) && <button className="btn" onClick={() => add("select", "Select")}>Select</button>}
+            {showMore && (
+              <>
+                {matches("date", query) && <button className="btn" onClick={() => add("date", "Date")}>Date</button>}
+                {matches("multiselect", query) && <button className="btn" onClick={() => add("multiselect", "Multi-select")}>Multi-select</button>}
+                {matches("boolean", query) && <button className="btn" onClick={() => add("boolean", "Yes / No")}>Yes / No</button>}
+                {matches("file", query) && <button className="btn" onClick={() => add("file", "File")}>File</button>}
+              </>
+            )}
+            {!query && (
+              <button className="btn" onClick={() => setShowMore((v)=>!v)}>{showMore ? 'Less…' : 'More…'}</button>
+            )}
           </>
         )}
       </div>
@@ -52,4 +60,9 @@ export default function QuestionPalette({
 function labelForSection(spec: FormSpec, sectionId: string) {
   for (const p of spec.pages) for (const s of p.sections) if (s.id === sectionId) return `${p.title} → ${s.title}`;
   return sectionId;
+}
+
+function matches(type: string, q: string) {
+  if (!q) return true;
+  return type.toLowerCase().includes(q.toLowerCase());
 }

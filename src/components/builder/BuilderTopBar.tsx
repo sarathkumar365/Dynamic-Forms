@@ -55,26 +55,60 @@ export default function BuilderTopBar({
   }
 
   return (
-    <div className="sticky top-0 z-10 mb-3 flex items-center gap-2 bg-white/70 backdrop-blur rounded-xl border p-3">
+    <div className="sticky top-0 z-10 mb-3 flex flex-wrap items-center gap-3 bg-white rounded-xl border p-4 w-full shadow-sm">
       <input
-        className="input"
+        className="input input-lg flex-1 basis-[260px] min-w-[220px]"
         placeholder="Form name"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
       <input
-        className="input"
+        className="input input-lg flex-[2] basis-[420px] min-w-[260px]"
         placeholder="Description (optional)"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-      <button className="btn" onClick={save} disabled={status === "saving" || !name.trim()}>
+      <button className="btn-base btn-primary btn-md ml-auto shrink-0" onClick={save} disabled={status === "saving" || !name.trim()}>
         {status === "saving" ? "Saving…" : "Save"}
       </button>
-      <button className="btn" onClick={onOpenRules}>Rules</button>
-      <button className="btn" onClick={onTogglePreview}>{previewOpen ? 'Hide Preview' : 'Show Preview'}</button>
-      <button className="btn" onClick={onOpenSpecViewer}>View JSON</button>
+      <button className="btn-base btn-primary btn-md shrink-0" onClick={onTogglePreview}>{previewOpen ? 'Hide Preview' : 'Show Preview'}</button>
+
+      {/* Kebab menu for secondary actions */}
+      <Kebab
+        items={[
+          { label: 'Rules', onClick: onOpenRules },
+          { label: 'View JSON', onClick: onOpenSpecViewer },
+          { label: 'Validate', onClick: () => {
+              const spec = getFormSpec();
+              const v = validateFormSpec({ ...spec, version: '1.0', id: 'tmp' });
+              alert(v.ok ? 'Spec looks good!' : v.errors.join('\n'));
+            }
+          }
+        ]}
+      />
       {status === "error" && <span className="text-sm text-red-600">{error}</span>}
+    </div>
+  );
+}
+
+function Kebab({ items }: { items: { label: string; onClick: () => void }[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button className="btn-base btn-primary btn-md btn-square" aria-label="More" onClick={() => setOpen((v) => !v)}>⋯</button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-44 rounded-lg border bg-white shadow">
+          {items.map((it, i) => (
+            <button
+              key={i}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+              onClick={() => { setOpen(false); it.onClick(); }}
+            >
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
