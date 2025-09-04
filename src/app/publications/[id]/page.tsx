@@ -19,12 +19,22 @@ export default async function PublicationPage({
   });
   if (!pub || !pub.form || pub.form.ownerId !== owner.id) return notFound();
 
-  // Fetch submissions separately, ordered by createdAt desc, include shareLink
-  const submissions = await prisma.submission.findMany({
-    where: { formId: pub.formId },
-    include: { shareLink: true },
-    orderBy: { createdAt: "desc" },
-  });
+  // Stats
+  const [submissionsCount, links] = await Promise.all([
+    prisma.submission.count({ where: { formId: pub.formId } }),
+    prisma.shareLink.findMany({ where: { publicationId: pub.id }, select: { id: true, token: true, isDisabled: true, createdAt: true, assignedName: true, assignedEmail: true, note: true } }),
+  ]);
+  const totalLinks = links.length;
+  // Try to compute total link opens; fallback to 0 if column not present yet
+  let totalOpens = 0;
+  try {
+    const rows = await prisma.$queryRaw<{ value: number | bigint }[]>`
+      SELECT COALESCE(SUM("viewCount"), 0)::bigint AS value
+      FROM "ShareLink" WHERE "publicationId" = ${pub.id}
+    `;
+    const v = rows?.[0]?.value ?? 0;
+    totalOpens = typeof v === 'bigint' ? Number(v) : Number(v || 0);
+  } catch {}
 
   // Existing: generic link
   async function createShareLink() {
@@ -147,51 +157,20 @@ export default async function PublicationPage({
         </ul>
       </div>
 
-      {/* SUBMISSIONS */}
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Responses</h3>
-        <Link href={`/publications/${pub.id}/analytics`} className="btn">Analyze Responses</Link>
-      </div>
+      {/* OVERVIEW */}
       <div className="card">
-        <h3 className="font-semibold mb-2">Submissions ({submissions.length})</h3>
-        <table className="table">
-          <thead>
-            <tr>
-              <th style={{ width: "200px" }}>When</th>
-              <th style={{ width: "260px" }}>Via Link</th>
-              <th>Payload</th>
-            </tr>
-          </thead>
-          <tbody>
-            {submissions.map((s) => (
-              <tr key={s.id}>
-                <td>{new Date(s.createdAt).toLocaleString()}</td>
-                <td className="align-top">
-                  <div className="text-xs break-all">
-                    /f/{s.shareLink?.token}
-                  </div>
-                  {s.shareLink &&
-                  (s.shareLink.assignedName || s.shareLink.assignedEmail) ? (
-                    <div className="text-xs text-gray-700">
-                      {s.shareLink.assignedName || "Unnamed"}
-                      {s.shareLink.assignedEmail ? (
-                        <> &lt;{s.shareLink.assignedEmail}&gt;</>
-                      ) : null}
-                      {s.shareLink.note ? <> — {s.shareLink.note}</> : null}
-                    </div>
-                  ) : (
-                    <div className="text-xs text-gray-500">Generic</div>
-                  )}
-                </td>
-                <td>
-                  <pre className="whitespace-pre-wrap text-xs">
-                    {pretty(s.payload)}
-                  </pre>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">Overview</h3>
+          <div className="flex items-center gap-2">
+            <Link href={`/publications/${pub.id}/analytics`} className="btn">Analyze Responses</Link>
+            <a className="btn" href={`/api/publications/${pub.id}/submissions/export`}>Export CSV</a>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Stat title="Links shared" value={totalLinks} />
+          <Stat title="Link opens" value={totalOpens} />
+          <Stat title="Submissions" value={submissionsCount} />
+        </div>
       </div>
     </div>
   );
@@ -211,4 +190,13 @@ function pretty(v: any) {
   } catch {
     return String(v);
   }
+}
+
+function Stat({ title, value }: { title: string; value: number }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="text-xs text-gray-600">{title}</div>
+      <div className="text-2xl font-semibold">{value}</div>
+    </div>
+  );
 }

@@ -9,6 +9,11 @@ export default async function PublicForm({ params }: { params: { token: string }
   })
   if (!share || share.isDisabled) return notFound()
 
+  // Track an open (best-effort)
+  try {
+    await prisma.shareLink.update({ where: { id: share.id }, data: { viewCount: { increment: 1 } } })
+  } catch {}
+
   const schema = share.publication.schema as any
   const uiSchema = (share.publication.uiSchema as any) ?? {}
 

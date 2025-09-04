@@ -2,19 +2,42 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function deletePublication(pubId) {
-  if (!pubId) {
-    console.error("Usage: node deletePublication.js <publicationId>");
+  if (!formId) {
+    console.error("No form ID provided.");
     process.exit(1);
   }
-  // Find all shareLinks for this publication
-  const shareLinks = await prisma.shareLink.findMany({
-    where: { publicationId: pubId },
-  });
-  const shareLinkIds = shareLinks.map((sl) => sl.id);
+  // Delete rules and submissions first
+  await prisma.rule.deleteMany({ where: { formId } });
+  await prisma.submission.deleteMany({ where: { formId } });
 
-  // Delete submissions for these shareLinks
-  if (shareLinkIds.length > 0) {
-    await prisma.submission.deleteMany({
+  // Find all page IDs for this form
+  const pages = await prisma.page.findMany({ where: { formId } });
+  const pageIds = pages.map(p => p.id);
+
+  // Find all section IDs for these pages
+  let sectionIds = [];
+  if (pageIds.length > 0) {
+    const sections = await prisma.section.findMany({ where: { pageId: { in: pageIds } } });
+    sectionIds = sections.map(s => s.id);
+  }
+
+  // Delete questions for these sections
+  if (sectionIds.length > 0) {
+    await prisma.question.deleteMany({ where: { sectionId: { in: sectionIds } } });
+  }
+
+  // Delete sections for these pages
+  if (pageIds.length > 0) {
+    await prisma.section.deleteMany({ where: { pageId: { in: pageIds } } });
+    await prisma.page.deleteMany({ where: { id: { in: pageIds } } });
+  }
+
+  // Delete publications for this form
+  await prisma.publication.deleteMany({ where: { formId } });
+
+  // Delete the form itself
+  await prisma.form.deleteMany({ where: { id: formId } });
+  console.log(`Deleted form and all related data for id: ${formId}`);
       where: { shareLinkId: { in: shareLinkIds } },
     });
   }

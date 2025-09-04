@@ -7,6 +7,7 @@ model Publication {
   uiSchema   Json?
   createdAt  DateTime    @default(now())
   shareLinks ShareLink[]
+  analyticsQueries AnalyticsQuery[]
 }
 
 model ShareLink {
@@ -20,6 +21,7 @@ model ShareLink {
   assignedName   String?
   assignedEmail  String?
   note           String?
+  viewCount      Int          @default(0)
 }
 
 generator client {
