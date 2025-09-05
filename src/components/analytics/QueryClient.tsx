@@ -20,6 +20,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
   const [savingName, setSavingName] = useState<string>("");
   const [saved, setSaved] = useState<Array<{ id: string; name: string; definition: any }>>([]);
   const [fields, setFields] = useState<Array<{ key: string; type: 'number'|'text'|'boolean'|'unknown'; samples?: string[] }>>([]);
+  const [submissionCount, setSubmissionCount] = useState<number | null>(null);
   const [topVals, setTopVals] = useState<Record<string, Array<{ value: string; count: number }>>>({});
   const [loadingTop, setLoadingTop] = useState<Record<string, boolean>>({});
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
@@ -137,7 +138,10 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
     try {
       const res = await fetch(`/api/publications/${publicationId}/analytics/fields`);
       const data = await res.json();
-      if (res.ok) setFields(data?.fields || []);
+      if (res.ok) {
+        setFields(data?.fields || []);
+        if (typeof data?.submissionCount === 'number') setSubmissionCount(data.submissionCount);
+      }
     } catch {}
   }
 
@@ -199,6 +203,18 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
     setFilters((fs) => fs.map((f, idx) => (idx === i ? { ...f, ...patch } : f)));
   }
   function delF(i: number) { setFilters((fs) => fs.filter((_, idx) => idx !== i)); }
+
+  // Empty state when no submissions exist
+  if (submissionCount === 0) {
+    return (
+      <div className="w-full max-w-screen-md mx-auto">
+        <div className="rounded-lg border p-6 bg-white text-center">
+          <div className="text-base font-semibold mb-1">No submissions yet</div>
+          <div className="text-sm text-gray-600">Analytics will be available after the first response is collected.</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 w-full max-w-screen-2xl mx-auto">

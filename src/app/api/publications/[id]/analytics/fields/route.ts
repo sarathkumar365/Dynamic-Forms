@@ -8,10 +8,12 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     const owner = await resolveOwner();
     const pub = await prisma.publication.findFirst({ where: { id: params.id }, include: { form: true } });
     if (!pub || !pub.form || pub.form.ownerId !== owner.id) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const fields = await getFieldRegistry(pub.formId);
-    return NextResponse.json({ fields });
+    const [fields, submissionCount] = await Promise.all([
+      getFieldRegistry(pub.formId),
+      prisma.submission.count({ where: { formId: pub.formId } }),
+    ]);
+    return NextResponse.json({ fields, submissionCount });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Failed" }, { status: 500 });
   }
 }
-
