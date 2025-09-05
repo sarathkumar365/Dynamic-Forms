@@ -31,7 +31,7 @@ export default function BuilderShell({ initialSpec, initialShowImport = false, i
     spec.pages?.[0]?.sections?.[0]?.id ?? null
   );
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
-  const [previewWidth, setPreviewWidth] = useState<number>(380);
+  const [previewWidth, setPreviewWidth] = useState<number>(420);
   const [showSpecViewer, setShowSpecViewer] = useState(false);
   const [showImport, setShowImport] = useState(initialShowImport);
 
