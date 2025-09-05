@@ -25,7 +25,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
   const [activeFilterIdx, setActiveFilterIdx] = useState<number | null>(null);
   const usageKey = `analyticsFieldUsage:${publicationId}`;
   const [queryToShow, setQueryToShow] = useState<any | null>(null);
-  const [queryView, setQueryView] = useState<"pretty" | "json">("pretty");
+  const [queryView, setQueryView] = useState<"pretty" | "json" | "sql">("pretty");
 
   async function run() {
     setErr(null); setResult(null);
