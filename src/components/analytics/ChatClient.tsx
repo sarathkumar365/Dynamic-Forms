@@ -59,7 +59,7 @@ export default function ChatClient({ publicationId }: { publicationId: string })
       <div className="border rounded-lg p-3 h-64 overflow-auto bg-white">
         <div className="space-y-3">
           {messages.map((m, i) => (
-            <div key={i} className={m.role === 'user' ? 'text-right' : 'text-left'}>
+            <div key={i} className={`${m.role === 'user' ? 'text-right' : 'text-left'} msg-animate`}>
               <div className={`inline-block px-3 py-2 rounded-lg text-sm ${m.role === 'user' ? 'bg-black text-white' : 'bg-gray-100'}`}>{m.content}</div>
             </div>
           ))}
@@ -81,7 +81,7 @@ export default function ChatClient({ publicationId }: { publicationId: string })
       </div>
 
       {last && (
-        <div className="space-y-3">
+        <div className="space-y-3 swap-animate">
           {last.series && last.series.labels?.length ? (
             <Bar labels={last.series.labels} data={last.series.data} />
           ) : last.value !== undefined ? (

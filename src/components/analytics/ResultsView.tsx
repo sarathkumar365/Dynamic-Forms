@@ -19,7 +19,7 @@ export default function ResultsView({ result, viewMode = 'auto', chartType = 'ba
     <div className="space-y-3">
       {renderedChart && (
         hasSeries ? (
-          <div className="flex justify-center">
+          <div className="flex justify-center swap-animate">
             {chartType === 'barH' ? (
               <BarH labels={result.series.labels} data={result.series.data} />
             ) : chartType === 'pie' ? (
@@ -31,14 +31,14 @@ export default function ResultsView({ result, viewMode = 'auto', chartType = 'ba
             )}
           </div>
         ) : hasValue ? (
-          <div className="rounded-lg border p-3 text-sm text-center">
+          <div className="rounded-lg border p-3 text-sm text-center swap-animate">
             Value: <span className="font-mono">{String(result.value)}</span>
           </div>
         ) : null
       )}
 
       {renderedTable && (
-        <div className="overflow-auto rounded-lg border">
+        <div className="overflow-auto rounded-lg border swap-animate">
           <table className="table">
             <thead>
               <tr>
@@ -64,7 +64,7 @@ export default function ResultsView({ result, viewMode = 'auto', chartType = 'ba
 
       {/* Fallback: show KPI when only a single value is available and nothing else was rendered */}
       {!renderedChart && !renderedTable && hasValue && !hasSeries && !hasTable && (
-        <div className="rounded-lg border p-3 text-sm text-center">
+        <div className="rounded-lg border p-3 text-sm text-center swap-animate">
           Value: <span className="font-mono">{String(result.value)}</span>
         </div>
       )}

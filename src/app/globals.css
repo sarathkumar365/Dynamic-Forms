@@ -80,3 +80,15 @@ th, td { @apply border-b py-2 text-left; }
 /* Tab/content switches (lightweight fade) */
 .tab-animate { animation: tabFade 150ms ease-out; will-change: opacity; }
 @keyframes tabFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* List item add animation (filters, pills, etc.) */
+.list-animate { animation: listIn 140ms ease-out; will-change: opacity, transform; }
+@keyframes listIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Swap regions (charts/tables/results) */
+.swap-animate { animation: swapIn 160ms ease-out; will-change: opacity; }
+@keyframes swapIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Chat message entry */
+.msg-animate { animation: msgIn 140ms ease-out; will-change: opacity, transform; }
+@keyframes msgIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }

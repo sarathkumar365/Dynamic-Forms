@@ -10,6 +10,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
   const [groupBy, setGroupBy] = useState<string>("");
   const [filters, setFilters] = useState<Array<{ field: string; op: FilterOp; value: string }>>([]);
   const [result, setResult] = useState<any | null>(null);
+  const [resultVersion, setResultVersion] = useState(0);
   const [display, setDisplay] = useState<'table'|'barV'|'barH'|'pie'|'line'>('table');
   const [err, setErr] = useState<string | null>(null);
   const [savingName, setSavingName] = useState<string>("");
@@ -32,6 +33,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
       const data = await readJsonSafe(res);
       if (!res.ok) throw new Error((data as any)?.error || `HTTP ${res.status}`);
       setResult(data as any);
+      setResultVersion((v) => v + 1);
       // record usage for simple ranking
       try {
         const used: string[] = [];
@@ -234,7 +236,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
           const ops = allowedOpsFor(fi?.type);
           const valueIsList = f.op === 'in' || f.op === 'nin';
           return (
-            <div key={i} className="mb-3">
+            <div key={i} className="mb-3 list-animate">
               <div className="flex gap-2 mb-1">
                 <input className="input" value={f.field} placeholder="field key" onFocus={()=>{ setActiveFilterIdx(i); setShowSidebar(true); }} onChange={(e)=>{ setF(i,{field:e.target.value}); ensureOpFor(i, e.target.value);} } />
                 <select className="input" value={f.op} onChange={(e)=>setF(i,{op:e.target.value as any})}>
@@ -394,7 +396,9 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
           ))}
         </div>
       </div>
-      <ResultsView result={result} viewMode={display==='table' ? 'table' : 'chart'} chartType={display==='table' ? 'barV' : display as any} />
+      <div key={`${display}-${resultVersion}`} className="swap-animate">
+        <ResultsView result={result} viewMode={display==='table' ? 'table' : 'chart'} chartType={display==='table' ? 'barV' : display as any} />
+      </div>
 
       {showSidebar && (
         <div className="fixed right-6 top-32 w-80 z-40">
