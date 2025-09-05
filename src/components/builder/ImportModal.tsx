@@ -4,6 +4,7 @@ import { importJson, detectFormat } from "@/lib/formspec/importers";
 import { compileFormSpec } from "@/lib/formspec/compile";
 import PreviewPane from "@/components/builder/PreviewPane";
 import LineNumberedTextarea from "@/components/ui/LineNumberedTextarea";
+import Modal from "@/components/ui/Modal";
 
 export default function ImportModal({ onClose }: { onClose: () => void }) {
   const [raw, setRaw] = useState("{\n  \"title\": \"Contact\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": { \"type\": \"string\", \"title\": \"Name\" },\n    \"email\": { \"type\": \"string\", \"format\": \"email\", \"title\": \"Email\" }\n  },\n  \"required\": [\"name\", \"email\"]\n}");
@@ -74,8 +75,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-2xl w-[95vw] max-w-6xl h-[85vh] flex flex-col">
+    <Modal onClose={onClose} contentClassName="w-[95vw] max-w-6xl h-[85vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="font-semibold">Import JSON</div>
           <div className="flex items-center gap-2">
@@ -97,6 +97,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex-1 overflow-hidden p-4">
           {tab === 'paste' && (
+            <div className="tab-animate">
             <div className="h-full overflow-auto grid md:grid-cols-2 gap-4">
               <div>
                 <div className="text-xs text-gray-600 mb-2">Paste JSON (FormSpec or JSON Schema)</div>
@@ -116,8 +117,10 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 </ul>
               </div>
             </div>
+            </div>
           )}
           {tab === 'validate' && (
+            <div className="tab-animate">
             <div className="h-full overflow-auto space-y-3">
               {error ? (
                 <div className="text-sm text-red-600 whitespace-pre-wrap">{error}</div>
@@ -139,8 +142,10 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 </>
               )}
             </div>
+            </div>
           )}
           {tab === 'teach' && (
+            <div className="tab-animate">
             <div className="h-full overflow-auto space-y-3">
               <div className="text-sm text-gray-700">How to structure your JSON for import.</div>
               {guideStatus === 'loading' && (
@@ -153,8 +158,10 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 <pre className="text-sm whitespace-pre-wrap leading-5 border rounded p-3 bg-gray-50">{guide}</pre>
               )}
             </div>
+            </div>
           )}
           {tab === 'preview' && spec && compiled && (
+            <div className="tab-animate">
             <div className="grid md:grid-cols-2 gap-4 h-full">
               <div className="flex h-full flex-col min-h-0">
                 <div className="text-xs font-medium mb-1">Compiled (Schema)</div>
@@ -168,9 +175,9 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
             </div>
+            </div>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

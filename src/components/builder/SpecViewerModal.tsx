@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Modal from "@/components/ui/Modal";
 
 export default function SpecViewerModal({
   spec,
@@ -46,8 +47,7 @@ export default function SpecViewerModal({
   const rightName = tab === "schema" ? "compiled.schema.json" : tab === "ui" ? "compiled.ui-schema.json" : "compiled.meta.json";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-2xl w-[95vw] max-w-6xl h-[85vh] flex flex-col">
+    <Modal onClose={onClose} contentClassName="w-[95vw] max-w-6xl h-[85vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <div className="font-semibold">Spec & Compile Viewer</div>
           <div className="flex items-center gap-2">
@@ -98,7 +98,6 @@ export default function SpecViewerModal({
             <pre className="text-xs whitespace-pre-wrap">{pretty(rightData)}</pre>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

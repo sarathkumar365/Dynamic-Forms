@@ -56,8 +56,8 @@ export default function PreviewDrawer({
   if (isMobile) {
     // Full-screen overlay on mobile
     return (
-      <div className="fixed inset-0 z-50 bg-black/40 flex">
-        <div className="bg-white ml-auto w-full h-full max-w-full p-3 overflow-auto">
+      <div className="fixed inset-0 z-50 bg-black/40 flex drawer-overlay">
+        <div className="bg-white ml-auto w-full h-full max-w-full p-3 overflow-auto drawer-panel">
           <div className="flex items-center justify-between mb-2">
             <div className="font-semibold">Live Preview</div>
             <button className="btn btn-xs" onClick={onToggle}>Close</button>
@@ -70,9 +70,9 @@ export default function PreviewDrawer({
 
   // Desktop: right-docked drawer with resizer
   return (
-    <div className="fixed top-[72px] right-0 bottom-0 z-40 flex">
+    <div className="fixed top-[72px] right-0 bottom-0 z-40 flex drawer-overlay">
       <div
-        className="h-full bg-white border-l shadow-lg overflow-auto"
+        className="h-full bg-white border-l shadow-lg overflow-auto drawer-panel"
         style={{ width: w }}
       >
         <div className="flex items-center justify-between p-3 border-b">
@@ -91,4 +91,3 @@ export default function PreviewDrawer({
     </div>
   );
 }
-

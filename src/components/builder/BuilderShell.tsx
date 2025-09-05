@@ -5,6 +5,7 @@ import BuilderCanvas from "./BuilderCanvas";
 import Inspector from "./Inspector";
 import RuleBuilder from "./RuleBuilder";
 import ActionRules from "./ActionRules";
+import Modal from "@/components/ui/Modal";
 import BuilderTopBar from "./BuilderTopBar";
 import PreviewDrawer from "./PreviewDrawer";
 import SpecViewerModal from "./SpecViewerModal";
@@ -130,15 +131,13 @@ export default function BuilderShell({ initialSpec, initialShowImport = false, i
           onDelete={deleteQuestion}
         />
         {showRules && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="bg-white rounded-lg shadow-xl p-4 max-w-2xl w-[90vw]">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-semibold">Global Rules</div>
-                <button className="btn btn-xs" onClick={() => setShowRules(false)}>Close</button>
-              </div>
-              <ActionRules spec={spec} setSpec={setSpec} />
+          <Modal onClose={() => setShowRules(false)} contentClassName="rounded-lg p-4 max-w-2xl w-[90vw]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-semibold">Global Rules</div>
+              <button className="btn btn-xs" onClick={() => setShowRules(false)}>Close</button>
             </div>
-          </div>
+            <ActionRules spec={spec} setSpec={setSpec} />
+          </Modal>
         )}
       </div>
       <div className="col-span-2">

@@ -69,15 +69,7 @@ export default function CanvasSection({
             onDelete={onDelete}
           />
         ))}
-        <button
-          className="btn btn-sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            addQuickQuestion(section.id);
-          }}
-        >
-          + Add Question
-        </button>
+        {/** Removed in-section add button as requested */}
       </div>
     </div>
   );

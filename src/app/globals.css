@@ -4,19 +4,20 @@
 body { @apply bg-gray-50 text-gray-900; }
 .container { @apply max-w-5xl mx-auto px-4; }
 .card { @apply bg-white rounded-xl shadow p-5; }
-.btn { @apply inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 whitespace-nowrap; }
+.btn { @apply inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 whitespace-nowrap transition-colors duration-150; }
 /* Consistent, composable button primitives for precise sizing */
-.btn-base { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 text-sm font-medium whitespace-nowrap select-none; }
+.btn-base { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 text-sm font-medium whitespace-nowrap select-none transition-colors duration-150; }
 .btn-primary { @apply bg-black text-white hover:bg-gray-800; }
 .btn-ghost { @apply bg-white text-gray-900 hover:bg-gray-50; }
 .btn-md { @apply h-10 px-4; }
+.btn-sm { @apply px-3 py-1.5 text-sm; }
 .btn-square { @apply w-10 h-10 p-0; }
 .btn-wide { @apply min-w-[120px]; }
 .btn-lg { @apply px-4 py-2.5 rounded-xl text-sm; }
-.btn-xs { @apply px-2 py-1 text-xs rounded-md border bg-black text-white; }
+.btn-xs { @apply px-2 py-1 text-xs rounded-md; }
 .input { @apply w-full border rounded-lg p-2; }
 .input-lg { @apply p-3 rounded-xl; }
-.link { @apply text-blue-600 hover:underline; }
+.link { @apply text-blue-600 hover:underline transition-colors duration-150; }
 .table { @apply w-full text-sm; }
 th, td { @apply border-b py-2 text-left; }
 .badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700; }
@@ -40,3 +41,42 @@ th, td { @apply border-b py-2 text-left; }
 .rjsf textarea[disabled] { @apply bg-gray-100 text-gray-500; }
 .rjsf .help-block { @apply text-xs text-gray-500 mt-1; }
 .rjsf .errors { @apply text-sm text-red-600 mt-1; }
+
+/* ---- App-wide micro animations ---- */
+/* Page transition: subtle fade + lift */
+.page-fade-in { animation: pageFadeIn 200ms ease-out; will-change: opacity; }
+@keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Modal overlay/content transitions */
+.modal-overlay { animation: fadeIn 140ms ease-out both; will-change: opacity; }
+.modal-shell { filter: drop-shadow(0 25px 50px rgba(0,0,0,.25)); }
+.modal-content { border: 0; box-shadow: none !important; isolation: isolate; animation: none; will-change: auto; backface-visibility: hidden; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes contentEnter { from { opacity: 0; box-shadow: none; } to { opacity: 1; box-shadow: var(--modal-shadow); } }
+
+/* Drawer transitions */
+.drawer-overlay { animation: fadeIn 120ms ease-out both; will-change: opacity; }
+.drawer-panel { animation: slideInRight 200ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: transform, opacity; backface-visibility: hidden; }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .page-fade-in,
+  .modal-overlay,
+  .modal-content,
+  .drawer-overlay,
+  .drawer-panel {
+    animation: none !important;
+  }
+  .btn, .btn-base, .link { transition: none !important; }
+}
+
+/* Tab/content switches (lightweight fade) */
+.tab-animate { animation: tabFade 150ms ease-out; will-change: opacity; }
+@keyframes tabFade { from { opacity: 0; } to { opacity: 1; } }

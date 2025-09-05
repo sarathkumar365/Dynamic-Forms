@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { resolveOwner } from "@/lib/owner";
+import RecentPublicationsClient from "@/components/home/RecentPublicationsClient";
 
 export const dynamic = 'force-dynamic'
 
@@ -47,24 +48,10 @@ export default async function Page() {
         )}
       </section>
 
-      {/* Recent publications */}
-      <section className="card">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">Recent Publications</h2>
-        </div>
-        {publications.length === 0 ? (
-          <div className="text-sm text-gray-600">No publications yet.</div>
-        ) : (
-          <ul className="divide-y">
-            {publications.map((p) => (
-              <li key={p.id} className="py-2 flex items-center justify-between">
-                <Link className="link" href={`/publications/${p.id}`}>{p.title}</Link>
-                <span className="text-xs text-gray-500">{new Date(p.createdAt).toLocaleString()}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {/* Recent publications with client-side sort */}
+      <RecentPublicationsClient
+        items={publications.map((p) => ({ id: p.id, title: p.title, createdAt: p.createdAt.toISOString() }))}
+      />
     </div>
   );
 }

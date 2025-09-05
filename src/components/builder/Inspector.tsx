@@ -1,6 +1,7 @@
 "use client";
 import { FormSpec, FSQuestion } from "@/types/formspec";
 import RuleBuilder from "./RuleBuilder";
+import Modal from "@/components/ui/Modal";
 import { useState } from "react";
 import { useMemo } from "react";
 
@@ -83,16 +84,14 @@ export default function Inspector({
         </button>
       </div>
       {showRuleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[350px] max-w-[90vw]">
-            <RuleBuilder
-              spec={spec}
-              question={q}
-              updateQuestion={updateQuestion}
-              onClose={() => setShowRuleModal(false)}
-            />
-          </div>
-        </div>
+        <Modal onClose={() => setShowRuleModal(false)} contentClassName="rounded-lg p-6 min-w-[350px] max-w-[90vw]">
+          <RuleBuilder
+            spec={spec}
+            question={q}
+            updateQuestion={updateQuestion}
+            onClose={() => setShowRuleModal(false)}
+          />
+        </Modal>
       )}
     </div>
   );
