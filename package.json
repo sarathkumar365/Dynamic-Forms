@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "start": "next start",
+    "clean": "rm -rf .next",
+    "dev:clean": "npm run clean && next dev",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "postinstall": "prisma generate",

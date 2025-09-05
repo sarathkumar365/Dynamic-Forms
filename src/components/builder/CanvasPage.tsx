@@ -41,7 +41,7 @@ export default function CanvasPage({
           />
         ))}
         <div>
-          <button className="btn btn-sm" onClick={() => addSection(page.id)}>+ Add Section</button>
+          <button className="btn btn-xm" onClick={() => addSection(page.id)}>+ Add Section</button>
         </div>
       </div>
     </div>

@@ -68,7 +68,7 @@ export default async function FormBuilder({
 
   return (
     <div className="p-6">
-      <BuilderShell initialSpec={initialSpec as any} />
+      <BuilderShell initialSpec={initialSpec as any} initialPreviewOpen={true} />
     </div>
   );
 }

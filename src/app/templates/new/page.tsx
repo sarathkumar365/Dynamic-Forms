@@ -23,7 +23,7 @@ function NewFormInner() {
   };
   return (
     <div className="p-6">
-      <BuilderShell initialSpec={initial} initialShowImport={showImport} />
+      <BuilderShell initialSpec={initial} initialShowImport={showImport} initialPreviewOpen={true} />
     </div>
   );
 }

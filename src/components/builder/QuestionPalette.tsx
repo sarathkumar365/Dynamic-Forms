@@ -42,7 +42,7 @@ export default function QuestionPalette({
                 {matches("date", query) && <button className="btn" onClick={() => add("date", "Date")}>Date</button>}
                 {matches("multiselect", query) && <button className="btn" onClick={() => add("multiselect", "Multi-select")}>Multi-select</button>}
                 {matches("boolean", query) && <button className="btn" onClick={() => add("boolean", "Yes / No")}>Yes / No</button>}
-                {matches("file", query) && <button className="btn" onClick={() => add("file", "File")}>File</button>}
+                {/* {matches("file", query) && <button className="btn" onClick={() => add("file", "File")}>File</button>} */}
               </>
             )}
             {!query && (

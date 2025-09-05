@@ -12,7 +12,7 @@ import ImportModal from "./ImportModal";
 import SaveBar from "./SaveBar";
 import React, { useEffect, useState } from "react";
 
-export default function BuilderShell({ initialSpec, initialShowImport = false }: { initialSpec?: any; initialShowImport?: boolean }) {
+export default function BuilderShell({ initialSpec, initialShowImport = false, initialPreviewOpen }: { initialSpec?: any; initialShowImport?: boolean; initialPreviewOpen?: boolean }) {
   const {
     spec,
     setSpec,
@@ -34,20 +34,24 @@ export default function BuilderShell({ initialSpec, initialShowImport = false }:
   const [showSpecViewer, setShowSpecViewer] = useState(false);
   const [showImport, setShowImport] = useState(initialShowImport);
 
-  // restore persisted preview state
+  // restore persisted preview state (allow page to override initial open)
   useEffect(() => {
     try {
-      const s = localStorage.getItem("builder.preview.state");
-      if (s) {
-        const obj = JSON.parse(s);
-        if (typeof obj.open === 'boolean') setPreviewOpen(obj.open);
-        if (typeof obj.width === 'number') setPreviewWidth(obj.width);
+      if (typeof initialPreviewOpen === 'boolean') {
+        setPreviewOpen(initialPreviewOpen);
       } else {
-        // default: open on desktop, closed on mobile
-        setPreviewOpen(typeof window !== 'undefined' ? window.innerWidth >= 1024 : false);
+        const s = localStorage.getItem("builder.preview.state");
+        if (s) {
+          const obj = JSON.parse(s);
+          if (typeof obj.open === 'boolean') setPreviewOpen(obj.open);
+          if (typeof obj.width === 'number') setPreviewWidth(obj.width);
+        } else {
+          // default: open preview by default (can be toggled)
+          setPreviewOpen(true);
+        }
       }
     } catch {}
-  }, []);
+  }, [initialPreviewOpen]);
   useEffect(() => {
     try {
       localStorage.setItem("builder.preview.state", JSON.stringify({ open: previewOpen, width: previewWidth }));
@@ -79,7 +83,6 @@ export default function BuilderShell({ initialSpec, initialShowImport = false }:
       setActiveSectionId(id);
     }
   };
-  console.log(spec,"Spec");
 
   // Show top action bar (Save/Preview) only after user adds at least one question
   const hasAnyQuestions = (() => {
