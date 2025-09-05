@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import BuilderShell from "@/components/builder/BuilderShell";
 import { resolveOwner } from "@/lib/owner";
 
+export const dynamic = 'force-dynamic'
+
 export default async function FormBuilder({
   params,
 }: {

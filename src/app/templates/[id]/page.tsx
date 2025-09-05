@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { resolveOwner } from "@/lib/owner";
 import { notFound, redirect } from "next/navigation";
 
+export const dynamic = 'force-dynamic'
+
 export default async function FormPage({ params }: { params: { id: string } }) {
   const owner = await resolveOwner();
   const form = await prisma.form.findFirst({

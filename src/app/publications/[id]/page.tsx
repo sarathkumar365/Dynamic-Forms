@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { nanoid } from "@/lib/id";
 import { revalidatePath } from "next/cache";
 
+export const dynamic = 'force-dynamic'
+
 export default async function PublicationPage({
   params,
 }: {

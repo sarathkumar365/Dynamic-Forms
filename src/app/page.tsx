@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { resolveOwner } from "@/lib/owner";
 
+export const dynamic = 'force-dynamic'
+
 export default async function Page() {
   const owner = await resolveOwner();
   const forms = await prisma.form.findMany({

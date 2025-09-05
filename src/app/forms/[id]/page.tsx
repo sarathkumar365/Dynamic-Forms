@@ -6,6 +6,8 @@ import FormDetailClient from "@/components/forms/FormDetailClient";
 import { compileFormSpec } from "@/lib/formspec/compile";
 import FormPreviewClient from "@/components/forms/FormPreviewClient";
 
+export const dynamic = 'force-dynamic'
+
 export default async function FormPage({ params }: { params: { id: string } }) {
   const owner = await resolveOwner();
   const form = await prisma.form.findFirst({

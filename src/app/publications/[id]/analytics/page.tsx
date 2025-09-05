@@ -4,6 +4,8 @@ import { resolveOwner } from "@/lib/owner";
 import QueryClient from "@/components/analytics/QueryClient";
 import ChatClient from "@/components/analytics/ChatClient";
 
+export const dynamic = 'force-dynamic'
+
 export default async function PublicationAnalytics({ params, searchParams }: { params: { id: string }, searchParams?: { [key: string]: string | string[] | undefined } }) {
   const owner = await resolveOwner();
   const pub = await prisma.publication.findFirst({
