@@ -100,7 +100,7 @@ export default function BuilderShell({ initialSpec, initialShowImport = false, i
           activeSectionId={activeSectionId}
         />
       </div>
-      <div className="col-span-5">
+      <div className="col-span-6">
         {hasAnyQuestions && (
           <BuilderTopBar
             getFormSpec={() => spec}

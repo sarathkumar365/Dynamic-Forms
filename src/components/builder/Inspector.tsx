@@ -41,6 +41,11 @@ export default function Inspector({
           onChange={(e) => updateQuestion(q.id, { label: e.target.value })}
         />
       </label>
+      {q.type === 'select' && (!Array.isArray(q.options) || q.options?.length === 0) && (
+        <div className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-2">
+          This select has no options. Add options below, or it will be saved as a plain text field.
+        </div>
+      )}
       <label className="block text-sm">
         Help
         <input

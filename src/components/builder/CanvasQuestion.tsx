@@ -20,7 +20,17 @@ export default function CanvasQuestion({
   return (
     <div className="group rounded-lg border p-2 flex items-center justify-between hover:bg-muted/40">
       <button className="text-left" onClick={() => onSelect(q.id)}>
-        <div className="text-sm font-medium">{q.label}</div>
+        <div className="text-sm font-medium">
+          {q.label}
+          {q.type === 'select' && (!Array.isArray(q.options) || q.options.length === 0) && (
+            <span
+              className="ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-yellow-50 text-yellow-700 border border-yellow-200"
+              title="This select has no options; will fallback to a text field when saving unless you add options."
+            >
+              needs options
+            </span>
+          )}
+        </div>
         <div className="text-xs text-muted-foreground">
           {q.type}
           {q.required ? " · required" : ""}

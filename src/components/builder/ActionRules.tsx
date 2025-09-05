@@ -25,6 +25,7 @@ export default function ActionRules({
   const [rows, setRows] = useState<Array<{ fieldKey: string; operator: Operator; rawValue: any }>>([
     { fieldKey: "", operator: "eq", rawValue: "" },
   ]);
+  const [ruleErr, setRuleErr] = useState<string | null>(null);
 
   const controlling = useMemo(
     () => rows.map((r) => questions.find((q) => q.key === r.fieldKey) || null),
@@ -40,6 +41,7 @@ export default function ActionRules({
 
   function addRule() {
     if (!targetKey) return;
+    setRuleErr(null);
     const conds = rows
       .filter((r) => r.fieldKey && String(r.rawValue).trim() !== "")
       .map((r, idx) => {
@@ -68,12 +70,20 @@ export default function ActionRules({
     if (actionType === "setRequired") {
       action = { op: "setRequired", field: targetKey, value: true };
     } else if (actionType === "setConst") {
+      if (String(constValue).trim() === "") {
+        setRuleErr("Please provide a value for ‘Set value’. ");
+        return;
+      }
       action = { op: "setConst", field: targetKey, value: constValue } as any;
     } else {
       const values = enumValues
         .split(",")
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
+      if (values.length === 0) {
+        setRuleErr("‘Restrict options’ requires at least one value.");
+        return;
+      }
       action = { op: "setEnum", field: targetKey, values } as any;
     }
 
@@ -101,6 +111,9 @@ export default function ActionRules({
   return (
     <div className="rounded-2xl border p-3 mt-3">
       <div className="text-sm font-semibold mb-2">Global Rules</div>
+      {ruleErr && (
+        <div className="mb-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded p-2">{ruleErr}</div>
+      )}
 
       {/* Existing rules */}
       <ul className="text-xs space-y-1 mb-3">
@@ -230,7 +243,7 @@ export default function ActionRules({
         <button
           className="btn btn-sm"
           onClick={addRule}
-          disabled={!targetKey || rows.length === 0 || rows.some((r) => !r.fieldKey || String(r.rawValue).trim() === "")}
+          disabled={!targetKey || rows.length === 0 || rows.some((r) => !r.fieldKey || String(r.rawValue).trim() === "") || (actionType==='setEnum' && enumValues.trim()==='') || (actionType==='setConst' && String(constValue).trim()==='')}
         >
           Add Rule
         </button>

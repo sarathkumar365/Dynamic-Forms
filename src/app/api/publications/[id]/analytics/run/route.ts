@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveOwner } from "@/lib/owner";
 import { Prisma } from "@prisma/client";
 import type { DSL, FilterOp } from "@/lib/analytics/types";
-import { runQuery } from "@/lib/analytics/sql";
+import { runQuery, buildSqlPreview } from "@/lib/analytics/sql";
 
 type RunBody = {
   metric: "count" | "sum" | "avg" | "min" | "max";
@@ -51,7 +51,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     };
 
     const result = await runQuery(pub.formId, dsl);
-    return NextResponse.json(result);
+    // Optional debug SQL in response when client requests it
+    const url = new URL(req.url);
+    const includeSql = url.searchParams.get('debug') === '1';
+    const payload = includeSql ? { ...result, sql: buildSqlPreview(pub.formId, dsl) } : result;
+    return NextResponse.json(payload);
   } catch (e: any) {
     console.error(e);
     return NextResponse.json({ error: e?.message || "Failed" }, { status: 500 });

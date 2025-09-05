@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
+import Modal from "@/components/ui/Modal";
 import ResultsView from "./ResultsView";
 
 type FilterOp = "eq" | "ne" | "in" | "nin" | "gt" | "gte" | "lt" | "lte";
@@ -13,6 +14,8 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
   const [resultVersion, setResultVersion] = useState(0);
   const [display, setDisplay] = useState<'table'|'barV'|'barH'|'pie'|'line'>('table');
   const [err, setErr] = useState<string | null>(null);
+  const [lastRunDef, setLastRunDef] = useState<any | null>(null);
+  const [showQueryModal, setShowQueryModal] = useState(false);
   const [savingName, setSavingName] = useState<string>("");
   const [saved, setSaved] = useState<Array<{ id: string; name: string; definition: any }>>([]);
   const [fields, setFields] = useState<Array<{ key: string; type: 'number'|'text'|'boolean'|'unknown'; samples?: string[] }>>([]);
@@ -21,18 +24,27 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [activeFilterIdx, setActiveFilterIdx] = useState<number | null>(null);
   const usageKey = `analyticsFieldUsage:${publicationId}`;
+  const [queryToShow, setQueryToShow] = useState<any | null>(null);
+  const [queryView, setQueryView] = useState<"pretty" | "json">("pretty");
 
   async function run() {
     setErr(null); setResult(null);
     try {
-      const res = await fetch(`/api/publications/${publicationId}/analytics/run`, {
+      const def = { metric, metricField: metric !== "count" ? metricField : undefined, filters, groupBy: groupBy || undefined };
+      setLastRunDef(def);
+      const res = await fetch(`/api/publications/${publicationId}/analytics/run?debug=1`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metric, metricField: metric !== "count" ? metricField : undefined, filters, groupBy: groupBy || undefined }),
+        body: JSON.stringify(def),
       });
       const data = await readJsonSafe(res);
       if (!res.ok) throw new Error((data as any)?.error || `HTTP ${res.status}`);
       setResult(data as any);
+      // surface SQL if present
+      if ((data as any)?.sql) {
+        (def as any).sql = (data as any).sql;
+        setLastRunDef(def);
+      }
       setResultVersion((v) => v + 1);
       // record usage for simple ranking
       try {
@@ -385,7 +397,16 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
 
       {/* Results header with single display switch */}
       <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600">Results</div>
+        <div className="text-sm text-gray-600 flex items-center gap-2">
+          <span>Results</span>
+          <button
+            className="btn-base btn-ghost btn-xs"
+            onClick={() => { setQueryToShow(lastRunDef || { metric, metricField: metric !== 'count' ? metricField : undefined, filters, groupBy: groupBy || undefined }); setQueryView('pretty'); setShowQueryModal(true); }}
+            title="Show executed query"
+          >
+            Show query
+          </button>
+        </div>
         <div className="flex gap-2">
           {(['table','barV','barH','pie','line'] as const).map(opt => (
             <button
@@ -399,6 +420,43 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
       <div key={`${display}-${resultVersion}`} className="swap-animate">
         <ResultsView result={result} viewMode={display==='table' ? 'table' : 'chart'} chartType={display==='table' ? 'barV' : display as any} />
       </div>
+
+      {showQueryModal && queryToShow && (
+        <Modal onClose={() => setShowQueryModal(false)} contentClassName="max-w-xl w-[90vw]">
+          <div className="flex items-center justify-between px-4 py-2 border-b">
+            <div className="font-semibold text-sm">Executed Query</div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">View:</span>
+              <button className={`btn-base btn-xs ${queryView==='pretty'?'btn-primary':'btn-ghost'}`} onClick={()=>setQueryView('pretty')}>Pretty</button>
+              <button className={`btn-base btn-xs ${queryView==='json'?'btn-primary':'btn-ghost'}`} onClick={()=>setQueryView('json')}>JSON</button>
+              {queryToShow?.sql && (
+                <button className={`btn-base btn-xs ${queryView==='sql'?'btn-primary':'btn-ghost'}`} onClick={()=>setQueryView('sql')}>SQL</button>
+              )}
+              <button
+                className="btn btn-xs"
+                onClick={() => {
+                  const text = queryView==='json' ? JSON.stringify(queryToShow, null, 2) : queryView==='sql' ? String(queryToShow?.sql || '') : readableString(queryToShow);
+                  try { navigator.clipboard.writeText(text); } catch {}
+                }}
+              >Copy</button>
+              <button className="btn btn-xs" onClick={() => setShowQueryModal(false)}>Close</button>
+            </div>
+          </div>
+          <div className="p-4">
+            {queryView === 'json' ? (
+              <pre className="text-xs whitespace-pre-wrap border rounded p-2 bg-gray-50">{JSON.stringify(queryToShow, null, 2)}</pre>
+            ) : queryView === 'sql' ? (
+              <pre className="text-xs whitespace-pre-wrap border rounded p-2 bg-gray-50">
+{String(queryToShow?.sql || '')}
+              </pre>
+            ) : (
+              <div className="text-xs font-mono border rounded p-3 bg-white leading-5">
+                {readableView(queryToShow)}
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
 
       {showSidebar && (
         <div className="fixed right-6 top-32 w-80 z-40">
@@ -465,6 +523,68 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
       )}
     </div>
   );
+}
+
+function readableView(def: any) {
+  const filters = Array.isArray(def?.filters) ? def.filters : [];
+  return (
+    <div className="space-y-1">
+      <div>
+        <span className="text-gray-500">metric:</span>
+        <span className="text-pink-600 ml-1">{def?.metric || 'count'}</span>
+        {def?.metric && def.metric !== 'count' && def?.metricField ? (
+          <>
+            <span className="text-gray-500 mx-1">on</span>
+            <span className="text-blue-600 font-mono">{def.metricField}</span>
+          </>
+        ) : null}
+      </div>
+      <div>
+        <span className="text-gray-500">group by:</span>
+        {def?.groupBy ? (
+          <span className="text-blue-600 font-mono ml-1">{def.groupBy}</span>
+        ) : (
+          <span className="text-gray-400 ml-1">none</span>
+        )}
+      </div>
+      <div>
+        <span className="text-gray-500">filters:</span>
+        {!filters.length && <span className="text-gray-400 ml-1">none</span>}
+      </div>
+      {filters.map((f: any, i: number) => (
+        <div key={i} className="pl-3">
+          <span className="text-blue-600 font-mono">{f.field}</span>
+          <span className="text-purple-600 mx-1">{f.op}</span>
+          {f.op === 'in' || f.op === 'nin' ? (
+            <span className="text-emerald-700">[{String(f.value)}]</span>
+          ) : (
+            <span className="text-emerald-700">{String(f.value)}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function readableString(def: any) {
+  const parts: string[] = [];
+  const metric = def?.metric || 'count';
+  if (metric === 'count') {
+    parts.push(`metric: count`);
+  } else {
+    parts.push(`metric: ${metric} on ${def?.metricField ?? '?'}`);
+  }
+  parts.push(`group by: ${def?.groupBy ?? 'none'}`);
+  const filters = Array.isArray(def?.filters) ? def.filters : [];
+  if (!filters.length) {
+    parts.push(`filters: none`);
+  } else {
+    parts.push(`filters:`);
+    for (const f of filters) {
+      parts.push(`  ${f.field} ${f.op} ${Array.isArray(f.value) ? `[${f.value.join(', ')}]` : String(f.value)}`);
+    }
+  }
+  return parts.join('\n');
 }
 
 function Bar({ labels, data }: { labels: string[]; data: number[] }) {
