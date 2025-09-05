@@ -11,6 +11,7 @@ export default function ChatClient({ publicationId }: { publicationId: string })
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [fields, setFields] = useState<Array<{ key: string; type: string }>>([]);
+  const [useAi, setUseAi] = useState(false);
 
   React.useEffect(() => {
     (async () => {
@@ -30,14 +31,16 @@ export default function ChatClient({ publicationId }: { publicationId: string })
     setMessages(next);
     setBusy(true);
     try {
-      const res = await fetch(`/api/publications/${publicationId}/analytics/chat`, {
+      const path = useAi ? `/api/publications/${publicationId}/analytics/chat/ai` : `/api/publications/${publicationId}/analytics/chat`;
+      const res = await fetch(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, history: next.slice(-6) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
-      setMessages((m) => [...m, { role: "assistant", content: data.text || "", result: data.result }]);
+      const suffix = data?.warning ? `\n(${data.warning})` : '';
+      setMessages((m) => [...m, { role: "assistant", content: (data.text || '') + suffix, result: data.result }]);
     } catch (e: any) {
       setMessages((m) => [...m, { role: "assistant", content: e?.message || "Something went wrong" }]);
     } finally {
@@ -75,8 +78,21 @@ export default function ChatClient({ publicationId }: { publicationId: string })
           ))}
         </div>
       )}
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <input className="input flex-1" placeholder="Ask a question..." value={input} onChange={(e)=>setInput(e.target.value)} onKeyDown={onKey} />
+        <div className="flex items-center gap-2 mr-1" title="Toggle AI natural-language parsing">
+          <span className={useAi ? 'ai-nlq-on' : 'text-xs text-gray-600'}>AI NLQ</span>
+          <button
+            type="button"
+            aria-pressed={useAi}
+            onClick={() => setUseAi(v => !v)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150 ${useAi ? 'bg-black' : 'bg-gray-300'}`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-150 ${useAi ? 'translate-x-5' : 'translate-x-1'}`}
+            />
+          </button>
+        </div>
         <button className="btn" onClick={send} disabled={busy}>Send</button>
       </div>
 

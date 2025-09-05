@@ -106,6 +106,26 @@ th, td { @apply border-b py-2 text-left; }
 
 .chart-kpi { animation: swapIn 200ms ease-out both; }
 
+/* Subtle animated gradient text for AI toggle */
+.ai-nlq-on { 
+  @apply text-xs;
+  background: linear-gradient(90deg, #111 0%, #6b7280 50%, #111 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: aiTextSheen 3600ms ease-in-out infinite;
+}
+@keyframes aiTextSheen {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-nlq-on { animation: none; }
+}
+
 /* Reduced motion: disable chart animations */
 @media (prefers-reduced-motion: reduce) {
   .chart-barh-fill,
