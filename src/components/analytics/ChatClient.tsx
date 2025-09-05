@@ -114,8 +114,8 @@ function Bar({ labels, data }: { labels: string[]; data: number[] }) {
       {labels.map((l, i) => (
         <div key={i} className="flex items-center gap-2">
           <div className="w-40 truncate text-xs" title={l}>{l}</div>
-          <div className="flex-1 h-3 bg-gray-100 rounded">
-            <div className="h-3 bg-black rounded" style={{ width: `${(data[i] / max) * 100}%` }} />
+          <div className="flex-1 h-3 bg-gray-100 rounded relative">
+            <div className="absolute left-0 top-0 bottom-0 bg-black rounded chart-barh-fill" style={{ ['--w' as any]: `${(data[i] / max) * 100}%` }} />
           </div>
           <div className="w-12 text-right text-xs">{data[i]}</div>
         </div>

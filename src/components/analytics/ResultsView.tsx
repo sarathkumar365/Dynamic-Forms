@@ -85,7 +85,7 @@ function BarH({ labels, data }: { labels: string[]; data: number[] }) {
         <div key={i} className="w-full max-w-[720px] flex items-center gap-3 my-1 px-2">
           <div className="w-40 truncate text-xs text-right" title={l}>{l}</div>
           <div className="relative h-4 flex-1 bg-gray-100 rounded">
-            <div className="absolute left-0 top-0 bottom-0 rounded" style={{ width: `${(data[i] / max) * 100}%`, backgroundColor: palette[i % palette.length] }} />
+            <div className="absolute left-0 top-0 bottom-0 rounded chart-barh-fill" style={{ ['--w' as any]: `${(data[i] / max) * 100}%`, backgroundColor: palette[i % palette.length] }} />
           </div>
           <div className="w-16 text-right text-xs">{data[i]}</div>
         </div>
@@ -103,7 +103,7 @@ function BarV({ labels, data }: { labels: string[]; data: number[] }) {
           <div key={i} className="flex flex-col items-center" style={{ minWidth: 28 }}>
             <div className="text-[10px] mb-1">{v}</div>
             <div className="h-36 w-5 bg-gray-100 rounded relative overflow-hidden">
-              <div className="absolute bottom-0 left-0 right-0 rounded-t" style={{ height: `${(v / max) * 100}%`, backgroundColor: palette[i % palette.length] }} />
+              <div className="absolute bottom-0 left-0 right-0 rounded-t chart-barv-fill" style={{ ['--h' as any]: `${(v / max) * 100}%`, backgroundColor: palette[i % palette.length] }} />
             </div>
             <div className="w-12 truncate text-[10px] mt-1 text-center" title={labels[i]}>{labels[i]}</div>
           </div>
@@ -122,7 +122,7 @@ function Pie({ labels, data }: { labels: string[]; data: number[] }) {
   }).join(', ');
   return (
     <div className="flex items-center gap-4">
-      <div className="w-40 h-40 rounded-full" style={{ background: `conic-gradient(${stops})` }} />
+      <div className="w-40 h-40 rounded-full chart-pie" style={{ background: `conic-gradient(${stops})` }} />
       <div className="space-y-1">
         {labels.map((l, i) => (
           <div key={i} className="flex items-center gap-2 text-xs">
@@ -141,19 +141,38 @@ function Line({ labels, data }: { labels: string[]; data: number[] }) {
   const max = Math.max(1, ...data);
   const width = Math.max(200, labels.length * 40);
   const height = 160;
+  const polyRef = React.useRef<SVGPolylineElement | null>(null);
+  const [len, setLen] = React.useState<number | null>(null);
+
   const pts = data.map((v, i) => {
     const x = (i / Math.max(1, data.length - 1)) * (width - 20) + 10;
     const y = height - (v / max) * (height - 20) - 10;
     return `${x},${y}`;
   }).join(' ');
+
+  React.useEffect(() => {
+    const el = polyRef.current;
+    if (!el) return;
+    const total = el.getTotalLength();
+    setLen(total);
+    // set initial dash, then trigger transition to 0 in next frame
+    el.style.transition = 'none';
+    el.style.strokeDasharray = `${total}`;
+    el.style.strokeDashoffset = `${total}`;
+    requestAnimationFrame(() => {
+      el.style.transition = 'stroke-dashoffset 520ms cubic-bezier(0.22, 1, 0.36, 1)';
+      el.style.strokeDashoffset = '0';
+    });
+  }, [pts]);
+
   return (
     <div className="w-full overflow-x-auto flex justify-center">
       <svg width={width} height={height} className="bg-white">
-        <polyline fill="none" stroke="#2563eb" strokeWidth="2" points={pts} />
+        <polyline ref={polyRef} fill="none" stroke="#2563eb" strokeWidth="2" points={pts} />
         {data.map((v,i)=>{
           const x = (i / Math.max(1, data.length - 1)) * (width - 20) + 10;
           const y = height - (v / max) * (height - 20) - 10;
-          return <circle key={i} cx={x} cy={y} r={3} fill={palette[i % palette.length]} />
+          return <circle key={i} cx={x} cy={y} r={3} fill={palette[i % palette.length]} className="swap-animate" />
         })}
       </svg>
       <div className="flex gap-3 px-3 justify-center w-full" style={{ maxWidth: width }}>

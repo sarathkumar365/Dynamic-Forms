@@ -92,3 +92,23 @@ th, td { @apply border-b py-2 text-left; }
 /* Chat message entry */
 .msg-animate { animation: msgIn 140ms ease-out; will-change: opacity, transform; }
 @keyframes msgIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---- Chart Animations ---- */
+.chart-barh-fill { animation: growWidth 420ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: width; }
+@keyframes growWidth { from { width: 0; } to { width: var(--w, 100%); } }
+
+.chart-barv-fill { animation: growHeight 420ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: height; }
+@keyframes growHeight { from { height: 0; } to { height: var(--h, 100%); } }
+
+.chart-pie { animation: pieIn 520ms cubic-bezier(0.22, 1, 0.36, 1) both; will-change: transform, opacity; transform-origin: 50% 50%; }
+@keyframes pieIn { from { opacity: 0; transform: scale(0.92) rotate(-6deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+
+.chart-kpi { animation: swapIn 200ms ease-out both; }
+
+/* Reduced motion: disable chart animations */
+@media (prefers-reduced-motion: reduce) {
+  .chart-barh-fill,
+  .chart-barv-fill,
+  .chart-pie,
+  .chart-kpi { animation: none !important; }
+}
