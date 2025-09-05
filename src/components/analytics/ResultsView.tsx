@@ -160,7 +160,7 @@ function Line({ labels, data }: { labels: string[]; data: number[] }) {
     el.style.strokeDasharray = `${total}`;
     el.style.strokeDashoffset = `${total}`;
     requestAnimationFrame(() => {
-      el.style.transition = 'stroke-dashoffset 520ms cubic-bezier(0.22, 1, 0.36, 1)';
+      el.style.transition = 'stroke-dashoffset 750ms cubic-bezier(0.22, 1, 0.36, 1)';
       el.style.strokeDashoffset = '0';
     });
   }, [pts]);

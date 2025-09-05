@@ -13,6 +13,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
   const [result, setResult] = useState<any | null>(null);
   const [resultVersion, setResultVersion] = useState(0);
   const [display, setDisplay] = useState<'table'|'barV'|'barH'|'pie'|'line'>('table');
+  const [showExpandModal, setShowExpandModal] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [lastRunDef, setLastRunDef] = useState<any | null>(null);
   const [showQueryModal, setShowQueryModal] = useState(false);
@@ -395,7 +396,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
 
       {err && <div className="text-sm text-red-600">{err}</div>}
 
-      {/* Results header with single display switch */}
+      {/* Results header with display switch and expand */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600 flex items-center gap-2">
           <span>Results</span>
@@ -407,7 +408,7 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
             Show query
           </button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {(['table','barV','barH','pie','line'] as const).map(opt => (
             <button
               key={opt}
@@ -415,11 +416,45 @@ export default function QueryClient({ publicationId, suggestedKeys }: { publicat
               onClick={()=>setDisplay(opt)}
             >{opt}</button>
           ))}
+          <button
+            className="btn-base btn-ghost btn-xs ml-2"
+            title="Expand view"
+            onClick={() => setShowExpandModal(true)}
+            disabled={!result}
+          >
+            <ExpandIcon />
+          </button>
         </div>
       </div>
       <div key={`${display}-${resultVersion}`} className="swap-animate">
         <ResultsView result={result} viewMode={display==='table' ? 'table' : 'chart'} chartType={display==='table' ? 'barV' : display as any} />
       </div>
+
+      {showExpandModal && result && (
+        <Modal onClose={() => setShowExpandModal(false)} contentClassName="w-[92vw] max-w-6xl">
+          <div className="flex items-center justify-between px-4 py-2 border-b">
+            <div className="font-semibold text-sm">Expanded Results</div>
+            <button className="btn btn-xs" onClick={() => setShowExpandModal(false)}>Close</button>
+          </div>
+          <div className="p-4">
+            <div className="flex flex-col md:flex-row gap-4 items-start">
+              <div className="md:w-2/3 border rounded-lg p-3 bg-white">
+                <ResultsView
+                  result={result}
+                  viewMode={display === 'table' ? 'table' : 'chart'}
+                  chartType={(display === 'table' ? 'barV' : display) as any}
+                />
+              </div>
+              <div className="md:w-1/3 border rounded-lg p-3 bg-white">
+                <div className="text-sm font-medium mb-2">Explanation</div>
+                <div className="text-xs whitespace-pre-wrap leading-5">
+                  {buildExplanation(lastRunDef || { metric, metricField: metric !== 'count' ? metricField : undefined, filters, groupBy: groupBy || undefined }, result)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {showQueryModal && queryToShow && (
         <Modal onClose={() => setShowQueryModal(false)} contentClassName="max-w-xl w-[90vw]">
@@ -602,4 +637,63 @@ function Bar({ labels, data }: { labels: string[]; data: number[] }) {
       ))}
     </div>
   );
+}
+
+function ExpandIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="21" y1="3" x2="14" y2="10" />
+      <polyline points="9 21 3 21 3 15" />
+      <line x1="3" y1="21" x2="10" y2="14" />
+    </svg>
+  );
+}
+
+function buildExplanation(def: any, result: any): string {
+  try {
+    const parts: string[] = [];
+    const metric = def?.metric || 'count';
+    const mf = def?.metricField;
+    const gb = def?.groupBy;
+    const filters = Array.isArray(def?.filters) ? def.filters : [];
+    const hasSeries = !!(result?.series && result.series.labels?.length);
+
+    // Header
+    if (metric === 'count') {
+      parts.push('Counting submissions');
+    } else {
+      parts.push(`${metric.toUpperCase()} of ${mf || '?'}`);
+    }
+    if (gb) parts.push(` grouped by ${gb}`);
+    if (filters.length) {
+      const fTxt = filters.map((f: any) => `${f.field} ${f.op} ${Array.isArray(f.value) ? `[${f.value.join(', ')}]` : String(f.value)}`).join('; ');
+      parts.push(` with filters: ${fTxt}`);
+    }
+
+    // Summary stats
+    if (hasSeries) {
+      const labels: string[] = result.series.labels || [];
+      const data: number[] = result.series.data || [];
+      const n = data.length;
+      const total = data.reduce((a, b) => a + (Number(b) || 0), 0);
+      const maxIdx = data.reduce((best, v, i) => (v > data[best] ? i : best), 0);
+      const minIdx = data.reduce((best, v, i) => (v < data[best] ? i : best), 0);
+      const topL = labels[maxIdx]; const topV = data[maxIdx];
+      const lowL = labels[minIdx]; const lowV = data[minIdx];
+      parts.push(`\nGroups: ${n}. Total across groups: ${total}.`);
+      if (Number.isFinite(topV)) parts.push(` Top group: ${topL} (${topV}).`);
+      if (Number.isFinite(lowV)) parts.push(` Lowest group: ${lowL} (${lowV}).`);
+    } else if (result && result.value != null) {
+      parts.push(`\nValue: ${String(result.value)}.`);
+    }
+
+    // Hints
+    if (!gb) parts.push('\nHint: Add a "group by" to break down results by category.');
+    if (metric !== 'count' && !mf) parts.push('\nHint: Choose a numeric/boolean field for this metric.');
+
+    return parts.join('');
+  } catch {
+    return 'An explanation is not available for this result.';
+  }
 }
