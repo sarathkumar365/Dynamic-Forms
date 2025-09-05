@@ -95,9 +95,9 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
             )}
           </div>
         </div>
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-hidden p-4">
           {tab === 'paste' && (
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="h-full overflow-auto grid md:grid-cols-2 gap-4">
               <div>
                 <div className="text-xs text-gray-600 mb-2">Paste JSON (FormSpec or JSON Schema)</div>
                 {/* Height applies to wrapper; textarea fills it */}
@@ -118,7 +118,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
           {tab === 'validate' && (
-            <div className="space-y-3">
+            <div className="h-full overflow-auto space-y-3">
               {error ? (
                 <div className="text-sm text-red-600 whitespace-pre-wrap">{error}</div>
               ) : (
@@ -141,7 +141,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
           {tab === 'teach' && (
-            <div className="space-y-3">
+            <div className="h-full overflow-auto space-y-3">
               <div className="text-sm text-gray-700">How to structure your JSON for import.</div>
               {guideStatus === 'loading' && (
                 <div className="text-sm text-gray-500">Loading guide…</div>
@@ -155,13 +155,17 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
           {tab === 'preview' && spec && compiled && (
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
+            <div className="grid md:grid-cols-2 gap-4 h-full">
+              <div className="flex h-full flex-col min-h-0">
                 <div className="text-xs font-medium mb-1">Compiled (Schema)</div>
-                <pre className="text-xs whitespace-pre-wrap border rounded p-2">{JSON.stringify(compiled.schema, null, 2)}</pre>
+                <div className="flex-1 min-h-0 overflow-auto">
+                  <pre className="text-xs whitespace-pre-wrap border rounded p-2">{JSON.stringify(compiled.schema, null, 2)}</pre>
+                </div>
               </div>
-              <div>
-                <PreviewPane compiled={compiled as any} />
+              <div className="flex h-full flex-col min-h-0">
+                <div className="flex-1 min-h-0 overflow-auto">
+                  <PreviewPane compiled={compiled as any} />
+                </div>
               </div>
             </div>
           )}
